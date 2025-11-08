@@ -1,0 +1,108 @@
+import React, { useEffect, useState } from 'react'
+import MainTemplate from '../templates/MainTemplate'
+import quoteService from '../services/quoteService'
+import QuoteCard from '../components/QuoteCard'
+import { useNavigate } from 'react-router-dom'
+import { Search, X } from 'lucide-react'
+
+export default function QuotesPage() {
+  const navigate = useNavigate()
+  const [quotes, setQuotes] = useState([])
+  const [query, setQuery] = useState('')
+
+  useEffect(() => {
+    let mounted = true
+    async function load() {
+      const list = await quoteService.listQuotes()
+      if (mounted) setQuotes(list || [])
+    }
+    load()
+    return () => { mounted = false }
+  }, [])
+
+  return (
+    <MainTemplate>
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold">Cotizaciones</h1>
+            <p className="mt-1 text-sm text-gray-600">Aquí puedes generar y consultar cotizaciones.</p>
+          </div>
+          <div>
+            <button
+              onClick={() => navigate('/quotes/new')}
+              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg shadow"
+            >
+              Crear cotización
+            </button>
+          </div>
+        </div>
+
+        {/* Barra de búsqueda mejorada */}
+        <div className="mb-6">
+          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 border-2 border-blue-100 shadow-sm">
+            <div className="relative w-full">
+              <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                <Search className="text-blue-500" size={22} />
+              </div>
+              <input
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="Buscar por empresa, folio, cliente o vendedor..."
+                className="w-full pl-14 pr-14 py-4 text-base border-2 border-blue-200 rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all bg-white font-medium placeholder:text-gray-400"
+              />
+              {query && (
+                <button
+                  onClick={() => setQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-red-100 hover:bg-red-200 text-red-600 p-2 rounded-lg transition-colors shadow-sm"
+                  title="Limpiar búsqueda"
+                >
+                  <X size={18} />
+                </button>
+              )}
+            </div>
+            
+            {query && (
+              <div className="mt-3 flex items-center gap-2 text-sm">
+                <span className="text-gray-600">Buscando:</span>
+                <span className="px-3 py-1 bg-blue-200 text-blue-800 rounded-full font-semibold">
+                  "{query}"
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        { (quotes || []).filter(Boolean).length === 0 ? (
+          <div className="p-8 bg-white rounded-xl border border-gray-200 text-center text-gray-600">
+            No hay cotizaciones aún. Pulsa "Crear cotización" para crear una.
+          </div>
+        ) : (
+          (() => {
+            const qlc = (quotes || []).filter(q => {
+              if (!query || String(query).trim() === '') return true
+              const s = String(query).toLowerCase()
+              const fields = [q.clientName, q.sellerCompany, q.folio, q.seller, q.sellerEmail]
+              return fields.some(f => f && String(f).toLowerCase().includes(s))
+            })
+            return (
+              <div>
+                {qlc.length === 0 ? (
+                  <div className="p-6 bg-white rounded-xl border border-gray-200 text-center text-gray-600">
+                    No se encontraron cotizaciones que coincidan con "{query}".
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {qlc.map(q => (
+                      <QuoteCard key={q.id || q.folio} quote={q} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })()
+        )}
+      </div>
+    </MainTemplate>
+  )
+}

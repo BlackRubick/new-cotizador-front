@@ -29,6 +29,7 @@ import {
 
 export default function ClientManager() {
   const [clients, setClients] = useState([])
+  const [editingEquipments, setEditingEquipments] = useState({})
   const [searchQuery, setSearchQuery] = useState('')
   const [filterEstado, setFilterEstado] = useState('')
   const [importing, setImporting] = useState(false)
@@ -113,86 +114,144 @@ export default function ClientManager() {
       c.hospital?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.ciudad?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.equipo?.toLowerCase().includes(searchQuery.toLowerCase())
-    
     const matchesFilter = !filterEstado || c.estado === filterEstado
-    
     return matchesSearch && matchesFilter
   })
 
-  const groupsMap = {}
-  filteredClients.forEach(c => {
-    const key = (c.hospital || c.empresaResponsable || '').toString().trim().toLowerCase() || `id-${c.id}`
-    if (!groupsMap[key]) {
-      groupsMap[key] = {
-        key,
-        hospital: c.hospital || c.empresaResponsable || c.name || '',
-        dependencias: new Set(),
-        empresas: new Set(),
-        equipos: [],
-        encargados: [],
-        clientIds: [],
-        sample: c
-      }
-    }
-  const g = groupsMap[key]
-  // asegurar que encargados sea siempre un array
-  if (!Array.isArray(g.encargados)) g.encargados = []
-    if (c.dependencia) g.dependencias.add(c.dependencia)
-    if (c.empresaResponsable) g.empresas.add(c.empresaResponsable)
-    if (c.equipo || c.marca || c.modelo || c.numeroSerie) {
-      g.equipos.push({
-        nombre: c.equipo || '',
-        marca: c.marca || '',
-        modelo: c.modelo || '',
-        numeroSerie: c.numeroSerie || '',
-        fechaInstalacion: c.fechaInstalacion || '',
-        ultimoMantenimiento: c.ultimoMantenimiento || ''
-      })
-    }
-    // Agregar encargados del registro al grupo (si existen)
-    if (Array.isArray(c.encargados) && c.encargados.length > 0) {
-      c.encargados.forEach(enc => {
-        // mantener referencia al cliente origen
-        g.encargados.push({ ...(enc || {}), _clientId: c.id })
-      })
-    }
-    g.clientIds.push(c.id)
-  })
-
-  const groups = Object.values(groupsMap).map(g => {
-    try {
-      // dedup encargados por id o por (nombre|email|telefono)
-      const unique = []
-      const seen = new Set()
-      const list = Array.isArray(g.encargados) ? g.encargados : []
-      list.forEach(enc => {
-        const name = String(enc?.nombre || '').trim().toLowerCase()
-        const email = String(enc?.email || '').trim().toLowerCase()
-        const phone = String(enc?.telefono || '').trim()
-        const keyEnc = enc && enc.id ? `id-${enc.id}` : `${name}|${email}|${phone}`
-        if (!seen.has(keyEnc)) {
-          seen.add(keyEnc)
-          unique.push(enc)
+  function buildGroups(listClients) {
+    const groupsMap = {}
+    listClients.forEach(c => {
+      const key = (c.hospital || c.empresaResponsable || '').toString().trim().toLowerCase() || `id-${c.id}`
+      if (!groupsMap[key]) {
+        groupsMap[key] = {
+          key,
+          hospital: c.hospital || c.empresaResponsable || c.name || '',
+          dependencias: new Set(),
+          empresas: new Set(),
+          equipos: [],
+          encargados: [],
+          clientIds: [],
+          sample: c
         }
-      })
-      return {
-        ...g,
-        dependencias: Array.from(g.dependencias || []),
-        empresas: Array.from(g.empresas || []),
-        encargados: unique
       }
-    } catch (err) {
-      console.error('[ClientManager] error processing group', g && g.key, err)
-      return {
-        ...g,
-        dependencias: Array.from(g.dependencias || []),
-        empresas: Array.from(g.empresas || []),
-        encargados: []
+      const g = groupsMap[key]
+      if (!Array.isArray(g.encargados)) g.encargados = []
+      if (c.dependencia) g.dependencias.add(c.dependencia)
+      if (c.empresaResponsable) g.empresas.add(c.empresaResponsable)
+      if (c.equipo || c.marca || c.modelo || c.numeroSerie) {
+        g.equipos.push({
+          nombre: c.equipo || '',
+          marca: c.marca || '',
+          modelo: c.modelo || '',
+          numeroSerie: c.numeroSerie || '',
+          fechaInstalacion: c.fechaInstalacion || '',
+          ultimoMantenimiento: c.ultimoMantenimiento || '',
+          _clientId: c.id
+        })
       }
-    }
-  })
+      if (Array.isArray(c.encargados) && c.encargados.length > 0) {
+        c.encargados.forEach(enc => {
+          g.encargados.push({ ...(enc || {}), _clientId: c.id })
+        })
+      }
+      g.clientIds.push(c.id)
+    })
+
+    const groups = Object.values(groupsMap).map(g => {
+      try {
+        const unique = []
+        const seen = new Set()
+        const list = Array.isArray(g.encargados) ? g.encargados : []
+        list.forEach(enc => {
+          const name = String(enc?.nombre || '').trim().toLowerCase()
+          const email = String(enc?.email || '').trim().toLowerCase()
+          const phone = String(enc?.telefono || '').trim()
+          const keyEnc = enc && enc.id ? `id-${enc.id}` : `${name}|${email}|${phone}`
+          if (!seen.has(keyEnc)) {
+            seen.add(keyEnc)
+            unique.push(enc)
+          }
+        })
+        return {
+          ...g,
+          dependencias: Array.from(g.dependencias || []),
+          empresas: Array.from(g.empresas || []),
+          encargados: unique
+        }
+      } catch (err) {
+        console.error('[ClientManager] error processing group', g && g.key, err)
+        return {
+          ...g,
+          dependencias: Array.from(g.dependencias || []),
+          empresas: Array.from(g.empresas || []),
+          encargados: []
+        }
+      }
+    })
+    return groups
+  }
+
+  const groups = buildGroups(filteredClients)
 
   const [openGroup, setOpenGroup] = useState(null)
+
+  async function handleStartEditEquipment(eq) {
+    const key = eq._clientId || `${eq.nombre}-${Math.random()}`
+    setEditingEquipments(prev => ({ ...prev, [key]: { ...eq } }))
+  }
+
+  function handleCancelEditEquipment(eq) {
+    const key = eq._clientId || `${eq.nombre}-${Math.random()}`
+    setEditingEquipments(prev => {
+      const next = { ...prev }
+      delete next[key]
+      return next
+    })
+  }
+
+  async function handleSaveEquipment(eq) {
+    const key = eq._clientId
+    const edited = editingEquipments[key]
+    if (!edited) return
+    const original = clients.find(c => c.id === key)
+    if (!original) {
+      await alertInfo('No se encontró el cliente origen del equipo')
+      return
+    }
+    const payload = {
+      ...original,
+      equipo: edited.nombre,
+      marca: edited.marca,
+      modelo: edited.modelo,
+      numeroSerie: edited.numeroSerie,
+      fechaInstalacion: edited.fechaInstalacion,
+      ultimoMantenimiento: edited.ultimoMantenimiento
+    }
+    const res = await clientService.updateClient(original.id, payload)
+    if (res && res.success) {
+      const nextClients = clientService.listClients()
+      setClients(nextClients)
+      const newGroups = buildGroups(nextClients.filter(c => {
+        const matchesSearch = !searchQuery || 
+          c.empresaResponsable?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          c.hospital?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          c.ciudad?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          c.equipo?.toLowerCase().includes(searchQuery.toLowerCase())
+        const matchesFilter = !filterEstado || c.estado === filterEstado
+        return matchesSearch && matchesFilter
+      }))
+      const sameGroup = newGroups.find(g => g.key === (openGroup && openGroup.key))
+      setOpenGroup(sameGroup || null)
+      setEditingEquipments(prev => {
+        const next = { ...prev }
+        delete next[key]
+        return next
+      })
+      await alertSuccess('Equipo actualizado')
+    } else {
+      await alertInfo('No fue posible actualizar el equipo')
+    }
+  }
 
   const estados = [...new Set(clients.map(c => c.estado).filter(Boolean))]
 
@@ -503,60 +562,109 @@ export default function ClientManager() {
 
                     {/* Contenido de la tarjeta */}
                     <div className="p-4 space-y-3">
-                      {/* Marca y Modelo */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-gray-50 rounded-lg p-3">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Tag size={14} className="text-med-primary" />
-                            <span className="text-xs font-semibold text-gray-500 uppercase">Marca</span>
+                      {editingEquipments[eq._clientId] ? (
+                        // Edit form
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <input
+                              className="w-full p-2 border-2 border-gray-200 rounded-lg"
+                              value={editingEquipments[eq._clientId].nombre || ''}
+                              onChange={e => setEditingEquipments(prev => ({ ...prev, [eq._clientId]: { ...prev[eq._clientId], nombre: e.target.value } }))}
+                              placeholder="Nombre del equipo"
+                            />
+                            <input
+                              className="w-full p-2 border-2 border-gray-200 rounded-lg"
+                              value={editingEquipments[eq._clientId].marca || ''}
+                              onChange={e => setEditingEquipments(prev => ({ ...prev, [eq._clientId]: { ...prev[eq._clientId], marca: e.target.value } }))}
+                              placeholder="Marca"
+                            />
                           </div>
-                          <p className="text-sm font-bold text-gray-800 truncate">
-                            {eq.marca || 'N/A'}
-                          </p>
-                        </div>
-                        <div className="bg-gray-50 rounded-lg p-3">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Tag size={14} className="text-med-primary" />
-                            <span className="text-xs font-semibold text-gray-500 uppercase">Modelo</span>
-                          </div>
-                          <p className="text-sm font-bold text-gray-800 truncate">
-                            {eq.modelo || 'N/A'}
-                          </p>
-                        </div>
-                      </div>
 
-                      {/* Número de Serie */}
-                      <div className="bg-gradient-to-r from-med-bg to-med-bg-100 rounded-lg p-3 border border-med-bg-100">
-                          <div className="flex items-center gap-2 mb-1">
-                          <Hash size={14} className="text-med-primary" />
-                          <span className="text-xs font-semibold text-gray-600 uppercase">Número de Serie</span>
-                        </div>
-                        <p className="text-sm font-mono font-bold text-med-slate-700">
-                          {eq.numeroSerie || 'Sin número de serie'}
-                        </p>
-                      </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <input
+                              className="w-full p-2 border-2 border-gray-200 rounded-lg"
+                              value={editingEquipments[eq._clientId].modelo || ''}
+                              onChange={e => setEditingEquipments(prev => ({ ...prev, [eq._clientId]: { ...prev[eq._clientId], modelo: e.target.value } }))}
+                              placeholder="Modelo"
+                            />
+                            <input
+                              className="w-full p-2 border-2 border-gray-200 rounded-lg font-mono"
+                              value={editingEquipments[eq._clientId].numeroSerie || ''}
+                              onChange={e => setEditingEquipments(prev => ({ ...prev, [eq._clientId]: { ...prev[eq._clientId], numeroSerie: e.target.value } }))}
+                              placeholder="Número de Serie"
+                            />
+                          </div>
 
-                      {/* Fechas */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-emerald-50 rounded-lg p-3 border border-emerald-200">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Calendar size={12} className="text-emerald-600" />
-                            <span className="text-xs font-semibold text-emerald-700 uppercase">Instalación</span>
+                          <div className="grid grid-cols-2 gap-3">
+                            <input
+                              className="w-full p-2 border-2 border-gray-200 rounded-lg"
+                              value={editingEquipments[eq._clientId].fechaInstalacion || ''}
+                              onChange={e => setEditingEquipments(prev => ({ ...prev, [eq._clientId]: { ...prev[eq._clientId], fechaInstalacion: e.target.value } }))}
+                              placeholder="Fecha de Instalación"
+                            />
+                            <input
+                              className="w-full p-2 border-2 border-gray-200 rounded-lg"
+                              value={editingEquipments[eq._clientId].ultimoMantenimiento || ''}
+                              onChange={e => setEditingEquipments(prev => ({ ...prev, [eq._clientId]: { ...prev[eq._clientId], ultimoMantenimiento: e.target.value } }))}
+                              placeholder="Último Mantenimiento"
+                            />
                           </div>
-                          <p className="text-xs font-medium text-emerald-800">
-                            {eq.fechaInstalacion || 'No registrada'}
-                          </p>
-                        </div>
-                        <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Wrench size={12} className="text-amber-600" />
-                            <span className="text-xs font-semibold text-amber-700 uppercase">Último Mant.</span>
+
+                          <div className="flex gap-2 justify-end">
+                            <button onClick={() => handleCancelEditEquipment(eq)} className="px-3 py-2 bg-gray-100 rounded-lg">Cancelar</button>
+                            <button onClick={() => handleSaveEquipment(eq)} className="px-3 py-2 bg-emerald-600 text-white rounded-lg">Guardar</button>
                           </div>
-                          <p className="text-xs font-medium text-amber-800">
-                            {eq.ultimoMantenimiento || 'No registrado'}
-                          </p>
                         </div>
-                      </div>
+                      ) : (
+                        // Read-only view with Edit action
+                        <>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-gray-50 rounded-lg p-3">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Tag size={14} className="text-med-primary" />
+                                <span className="text-xs font-semibold text-gray-500 uppercase">Marca</span>
+                              </div>
+                              <p className="text-sm font-bold text-gray-800 truncate">{eq.marca || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gray-50 rounded-lg p-3">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Tag size={14} className="text-med-primary" />
+                                <span className="text-xs font-semibold text-gray-500 uppercase">Modelo</span>
+                              </div>
+                              <p className="text-sm font-bold text-gray-800 truncate">{eq.modelo || 'N/A'}</p>
+                            </div>
+                          </div>
+
+                          <div className="bg-gradient-to-r from-med-bg to-med-bg-100 rounded-lg p-3 border border-med-bg-100">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Hash size={14} className="text-med-primary" />
+                              <span className="text-xs font-semibold text-gray-600 uppercase">Número de Serie</span>
+                            </div>
+                            <p className="text-sm font-mono font-bold text-med-slate-700">{eq.numeroSerie || 'Sin número de serie'}</p>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-emerald-50 rounded-lg p-3 border border-emerald-200">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Calendar size={12} className="text-emerald-600" />
+                                <span className="text-xs font-semibold text-emerald-700 uppercase">Instalación</span>
+                              </div>
+                              <p className="text-xs font-medium text-emerald-800">{eq.fechaInstalacion || 'No registrada'}</p>
+                            </div>
+                            <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Wrench size={12} className="text-amber-600" />
+                                <span className="text-xs font-semibold text-amber-700 uppercase">Último Mant.</span>
+                              </div>
+                              <p className="text-xs font-medium text-amber-800">{eq.ultimoMantenimiento || 'No registrado'}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-end mt-2">
+                            <button onClick={() => handleStartEditEquipment(eq)} className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg">Editar</button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}

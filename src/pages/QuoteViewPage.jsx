@@ -18,7 +18,7 @@ import {
   ArrowLeft,
   Download
 } from 'lucide-react'
-import ProductImage from '../components/ProductImage'
+// Product images hidden in Quotes view per user request
 import { confirmDialog, alertError } from '../utils/swal'
 
 export default function QuoteViewPage() {
@@ -235,7 +235,7 @@ export default function QuoteViewPage() {
                     <div className="p-2 bg-blue-100 rounded-lg">
                       <Package className="text-blue-600" size={20} />
                     </div>
-                    <h3 className="text-lg font-bold text-gray-800">Productos y Servicios</h3>
+                    <h3 className="text-lg font-bold text-gray-800">Productos y Servicios </h3>
                   </div>
                   <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
                     {(quote.products || []).length} {(quote.products || []).length === 1 ? 'producto' : 'productos'}
@@ -257,11 +257,8 @@ export default function QuoteViewPage() {
                             <div className="flex-1">
                               <div className="flex items-start gap-3">
                                 <div className="flex items-center justify-center w-16 h-16 bg-white rounded-lg border border-gray-200 group-hover:border-blue-300 transition-colors overflow-hidden">
-                                  {p.modelo || p.name ? (
-                                    <ProductImage model={p.modelo || p.name} className="w-full h-full object-cover" />
-                                  ) : (
-                                    <span className="font-bold text-blue-600">#{i + 1}</span>
-                                  )}
+                                  {/* Imagen ocultada: se muestra solo el índice para mantener el layout */}
+                                  <span className="font-bold text-blue-600">#{i + 1}</span>
                                 </div>
                                 <div className="flex-1">
                                   <h5 className="font-bold text-gray-800 text-base mb-1">

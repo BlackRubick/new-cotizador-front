@@ -7,33 +7,27 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isHovered, setIsHovered] = useState(false)
-  const [role, setRole] = useState('vendedor')
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
   const { login } = useAuth()
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    // Aquí normalmente validarías y llamarías a tu API de autenticación
-    // Try to find a stored user (created in UsersPage) by email and use its data if present
-    try {
-      const raw = localStorage.getItem('app_users')
-      if (raw) {
-        const users = JSON.parse(raw)
-        const found = users.find(u => u.email === email)
-        if (found) {
-          // login using stored user record but prefer the role selected in the form
-          // this lets you override a stored role (e.g., log in as 'jefe') while keeping extras
-          login({ name: found.name || found.email, role: role || found.role, extra: found.extra || {} })
-          navigate('/home')
-          return
-        }
-      }
-    } catch (e) {
-      // ignore and fallback to default
-    }
+    setError('')
+    setIsLoading(true)
 
-    login({ name: email || 'Usuario', role })
-    navigate('/home')
+    try {
+      // Llamar al servicio de login que se conecta con la API
+      await login(email, password)
+      // Si el login es exitoso, redirigir al home
+      navigate('/home')
+    } catch (err) {
+      // Mostrar error al usuario
+      setError(err.message || 'Error al iniciar sesión. Verifica tus credenciales.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -81,6 +75,7 @@ export default function LoginPage() {
                   name="email"
                   type="email"
                   autoComplete="email"
+                  required
                   className="appearance-none block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 bg-white/50"
                   placeholder="tu@email.com"
                   value={email}
@@ -103,6 +98,7 @@ export default function LoginPage() {
                   name="password"
                   type="password"
                   autoComplete="current-password"
+                  required
                   className="appearance-none block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 bg-white/50"
                   placeholder="••••••••"
                   value={password}
@@ -110,27 +106,30 @@ export default function LoginPage() {
                 />
               </div>
             </div>
-          <div className="grid grid-cols-2 gap-4">
-            <select value={role} onChange={e => setRole(e.target.value)} className="py-3 px-3 rounded-xl border">
-              <option value="vendedor">Vendedor</option>
-              <option value="admin">Administrador</option>
-              <option value="jefe">Jefe</option>
-            </select>
+
+            {/* Error message */}
+            {error && (
+              <div className="rounded-lg bg-red-50 p-4 border border-red-200">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
 
             {/* Submit button */}
             <button
               type="submit"
+              disabled={isLoading}
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
-              className="group relative w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent text-base font-medium rounded-xl text-white bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+              className="group relative w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent text-base font-medium rounded-xl text-white bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              <span>Ingresar</span>
-              <ArrowRight 
-                size={20} 
-                className={`transform transition-transform duration-300 ${isHovered ? 'translate-x-1' : ''}`}
-              />
+              <span>{isLoading ? 'Iniciando sesión...' : 'Ingresar'}</span>
+              {!isLoading && (
+                <ArrowRight 
+                  size={20} 
+                  className={`transform transition-transform duration-300 ${isHovered ? 'translate-x-1' : ''}`}
+                />
+              )}
             </button>
-            </div>
           </form>
 
           {/* Footer info */}

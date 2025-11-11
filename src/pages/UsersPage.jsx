@@ -2,22 +2,8 @@ import React, { useEffect, useState } from 'react'
 import MainTemplate from '../templates/MainTemplate'
 import { useAuth } from '../contexts/AuthContext'
 import { Users, UserPlus, Mail, Lock, Shield, Trash2, CheckCircle, XCircle, Edit3 } from 'lucide-react'
-import { confirmDialog, alertInfo } from '../utils/swal'
-
-const STORAGE_KEY = 'app_users'
-
-function loadUsers() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : []
-  } catch (e) {
-    return []
-  }
-}
-
-function saveUsers(users) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(users))
-}
+import { confirmDialog, alertInfo, alertSuccess, alertError } from '../utils/swal'
+import { listUsers, createUser, updateUser, deleteUser } from '../services/userService'
 
 export default function UsersPage() {
   const { user } = useAuth()
@@ -29,6 +15,7 @@ export default function UsersPage() {
   const [canModifyPrices, setCanModifyPrices] = useState(false)
   const [assignedCompanyId, setAssignedCompanyId] = useState('')
   const [showForm, setShowForm] = useState(false)
+  const [editingUser, setEditingUser] = useState(null) // Usuario en edición
 
   const sellerCompanies = [
     { id: 'conduit-life', name: 'CONDUIT LIFE', fullName: 'Conduit Life S.A. de C.V.' },
@@ -38,12 +25,18 @@ export default function UsersPage() {
   ]
 
   useEffect(() => {
-    setUsers(loadUsers())
+    loadUsersFromApi()
   }, [])
 
-  useEffect(() => {
-    saveUsers(users)
-  }, [users])
+  async function loadUsersFromApi() {
+    try {
+      const usersData = await listUsers()
+      setUsers(usersData)
+    } catch (error) {
+      console.error('Error al cargar usuarios:', error)
+      await alertError('Error al cargar usuarios')
+    }
+  }
 
   async function handleCreate(e) {
     e.preventDefault()
@@ -53,6 +46,15 @@ export default function UsersPage() {
     }
     if (!email) {
       await alertInfo('Email requerido')
+      return
+    }
+    if (!password) {
+      await alertInfo('Contraseña requerida')
+      return
+    }
+    // Validar que un admin no pueda crear jefes
+    if (user?.role === 'admin' && role === 'jefe') {
+      await alertInfo('No tienes permisos para crear un jefe')
       return
     }
     // If creating a vendedor, require assigning a company
@@ -66,31 +68,55 @@ export default function UsersPage() {
       return
     }
 
-    const newUser = { 
-      id: Date.now(), 
-      name,
-      email, 
-      password, 
-      role, 
-      extra: { 
-        canModifyPrices: role === 'admin' ? canModifyPrices : false,
-        assignedCompanyId: role === 'vendedor' ? (assignedCompanyId || null) : null
-      },
-      createdAt: new Date().toISOString()
+    try {
+      const newUser = { 
+        name,
+        email, 
+        password, 
+        role, 
+        extra: { 
+          canModifyPrices: role === 'admin' ? canModifyPrices : false,
+          assignedCompanyId: role === 'vendedor' ? (assignedCompanyId || null) : null
+        }
+      }
+      
+      const createdUser = await createUser(newUser)
+      setUsers(prev => [createdUser, ...prev])
+      
+      setEmail('')
+      setPassword('')
+      setName('')
+      setRole('vendedor')
+      setCanModifyPrices(false)
+      setAssignedCompanyId('')
+      setShowForm(false)
+      
+      await alertSuccess('Usuario creado exitosamente')
+    } catch (error) {
+      console.error('Error al crear usuario:', error)
+      await alertError('Error al crear usuario')
     }
-    setUsers(prev => [newUser, ...prev])
-    setEmail('')
-    setPassword('')
-    setName('')
-    setRole('vendedor')
-    setCanModifyPrices(false)
-    setAssignedCompanyId('')
-    setShowForm(false)
   }
 
   async function handleDelete(id) {
+    const userToDelete = users.find(u => u.id === id)
+    
+    // Validar que un admin no pueda eliminar a un jefe
+    if (user?.role === 'admin' && userToDelete?.role === 'jefe') {
+      await alertInfo('No tienes permisos para eliminar a un jefe')
+      return
+    }
+    
     if (!(await confirmDialog('¿Eliminar usuario?'))) return
-    setUsers(prev => prev.filter(u => u.id !== id))
+    
+    try {
+      await deleteUser(id)
+      setUsers(prev => prev.filter(u => u.id !== id))
+      await alertSuccess('Usuario eliminado')
+    } catch (error) {
+      console.error('Error al eliminar usuario:', error)
+      await alertError('Error al eliminar usuario')
+    }
   }
 
   async function toggleCanModify(id) {
@@ -98,7 +124,105 @@ export default function UsersPage() {
       await alertInfo('Solo el jefe puede cambiar este permiso')
       return
     }
-    setUsers(prev => prev.map(u => u.id === id ? { ...u, extra: { ...u.extra, canModifyPrices: !u.extra?.canModifyPrices } } : u))
+    
+    try {
+      const userToUpdate = users.find(u => u.id === id)
+      if (!userToUpdate) return
+      
+      const updatedData = {
+        ...userToUpdate,
+        extra: {
+          ...userToUpdate.extra,
+          canModifyPrices: !userToUpdate.extra?.canModifyPrices
+        }
+      }
+      
+      await updateUser(id, updatedData)
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, extra: { ...u.extra, canModifyPrices: !u.extra?.canModifyPrices } } : u))
+      await alertSuccess('Permisos actualizados')
+    } catch (error) {
+      console.error('Error al actualizar permisos:', error)
+      await alertError('Error al actualizar permisos')
+    }
+  }
+
+  async function handleStartEdit(userToEdit) {
+    // Validar que un admin no pueda editar a un jefe
+    if (user?.role === 'admin' && userToEdit?.role === 'jefe') {
+      await alertInfo('No tienes permisos para editar a un jefe')
+      return
+    }
+    
+    setEditingUser(userToEdit)
+    setName(userToEdit.name)
+    setEmail(userToEdit.email)
+    setPassword('') // Dejamos vacío, solo se cambiará si el usuario ingresa una nueva
+    setRole(userToEdit.role)
+    setCanModifyPrices(userToEdit.extra?.canModifyPrices || false)
+    setAssignedCompanyId(userToEdit.extra?.assignedCompanyId || '')
+    setShowForm(true)
+  }
+
+  async function handleUpdate(e) {
+    e.preventDefault()
+    if (!name) {
+      await alertInfo('Nombre requerido')
+      return
+    }
+    if (!email) {
+      await alertInfo('Email requerido')
+      return
+    }
+    if (role === 'vendedor' && !assignedCompanyId) {
+      await alertInfo('Debes seleccionar una empresa para el vendedor')
+      return
+    }
+
+    try {
+      const updatedData = { 
+        name,
+        email,
+        role, 
+        extra: { 
+          canModifyPrices: role === 'admin' ? canModifyPrices : false,
+          assignedCompanyId: role === 'vendedor' ? (assignedCompanyId || null) : null
+        }
+      }
+      
+      // Solo incluir password si se ingresó uno nuevo
+      if (password && password.trim() !== '') {
+        updatedData.password = password
+      }
+      
+      const updated = await updateUser(editingUser.id, updatedData)
+      setUsers(prev => prev.map(u => u.id === editingUser.id ? updated : u))
+      
+      // Limpiar formulario
+      setEditingUser(null)
+      setEmail('')
+      setPassword('')
+      setName('')
+      setRole('vendedor')
+      setCanModifyPrices(false)
+      setAssignedCompanyId('')
+      setShowForm(false)
+      
+      await alertSuccess('Usuario actualizado exitosamente')
+    } catch (error) {
+      console.error('Error al actualizar usuario:', error)
+      await alertError('Error al actualizar usuario')
+    }
+  }
+
+  function handleCancelEdit() {
+    setEditingUser(null)
+    setEmail('')
+    setPassword('')
+    setName('')
+    setRole('vendedor')
+    setCanModifyPrices(false)
+    setAssignedCompanyId('')
+    setShowForm(false)
   }
 
   const getRoleColor = (role) => {
@@ -199,7 +323,13 @@ export default function UsersPage() {
         {/* Create User Section */}
         <div className="mb-6">
           <button
-            onClick={() => setShowForm(!showForm)}
+            onClick={() => {
+              if (showForm && editingUser) {
+                handleCancelEdit()
+              } else {
+                setShowForm(!showForm)
+              }
+            }}
             className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 font-medium"
           >
             <UserPlus size={20} />
@@ -210,8 +340,10 @@ export default function UsersPage() {
         {showForm && (
           <div className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-xl border border-white/20 mb-6 transform animate-in">
             <div className="flex items-center gap-2 mb-4">
-              <UserPlus className="text-blue-600" size={24} />
-              <h2 className="text-xl font-bold text-gray-800">Nuevo Usuario</h2>
+              {editingUser ? <Edit3 className="text-blue-600" size={24} /> : <UserPlus className="text-blue-600" size={24} />}
+              <h2 className="text-xl font-bold text-gray-800">
+                {editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}
+              </h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -255,7 +387,7 @@ export default function UsersPage() {
               {/* Password Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Contraseña
+                  Contraseña {editingUser && <span className="text-gray-500 text-xs">(dejar vacío para no cambiar)</span>}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -264,7 +396,7 @@ export default function UsersPage() {
                   <input
                     type="password"
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white/50"
-                    placeholder="••••••••"
+                    placeholder={editingUser ? "••••••••" : "Contraseña"}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                   />
@@ -287,7 +419,9 @@ export default function UsersPage() {
                   >
                     <option value="vendedor"> Vendedor</option>
                     <option value="admin"> Administrador</option>
-                    <option value="jefe"> Jefe</option>
+                    <option value="jefe" disabled={user?.role === 'admin'}>
+                       Jefe {user?.role === 'admin' ? '(Sin permisos)' : ''}
+                    </option>
                   </select>
                 </div>
               </div>
@@ -323,14 +457,14 @@ export default function UsersPage() {
 
             <div className="mt-6 flex gap-3">
               <button
-                onClick={handleCreate}
+                onClick={editingUser ? handleUpdate : handleCreate}
                 className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 font-medium"
               >
-                <UserPlus size={20} />
-                Crear Usuario
+                {editingUser ? <Edit3 size={20} /> : <UserPlus size={20} />}
+                {editingUser ? 'Actualizar Usuario' : 'Crear Usuario'}
               </button>
               <button
-                onClick={() => setShowForm(false)}
+                onClick={editingUser ? handleCancelEdit : () => setShowForm(false)}
                 className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors font-medium"
               >
                 Cancelar
@@ -433,9 +567,27 @@ export default function UsersPage() {
                         )}
                         
                         <button
+                          onClick={() => handleStartEdit(u)}
+                          disabled={user?.role === 'admin' && u.role === 'jefe'}
+                          className={`p-2 rounded-lg transition-colors group-hover:scale-110 transform duration-200 ${
+                            user?.role === 'admin' && u.role === 'jefe'
+                              ? 'text-gray-400 cursor-not-allowed'
+                              : 'text-blue-600 hover:bg-blue-50'
+                          }`}
+                          title={user?.role === 'admin' && u.role === 'jefe' ? 'No puedes editar a un jefe' : 'Editar usuario'}
+                        >
+                          <Edit3 size={20} />
+                        </button>
+                        
+                        <button
                           onClick={() => handleDelete(u.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors group-hover:scale-110 transform duration-200"
-                          title="Eliminar usuario"
+                          disabled={user?.role === 'admin' && u.role === 'jefe'}
+                          className={`p-2 rounded-lg transition-colors group-hover:scale-110 transform duration-200 ${
+                            user?.role === 'admin' && u.role === 'jefe'
+                              ? 'text-gray-400 cursor-not-allowed'
+                              : 'text-red-600 hover:bg-red-50'
+                          }`}
+                          title={user?.role === 'admin' && u.role === 'jefe' ? 'No puedes eliminar a un jefe' : 'Eliminar usuario'}
                         >
                           <Trash2 size={20} />
                         </button>

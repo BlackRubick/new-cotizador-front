@@ -11,7 +11,8 @@ const rolePermissions = {
     'view_quotes',
     'create_quote',
     'view_clients',
-    'view_products'
+    'view_products',
+    'admin_panel'
   ],
   vendedor: ['view_home', 'view_quotes', 'create_quote', 'view_clients'],
 }

@@ -32,25 +32,25 @@ export default function QuotesPage() {
 
   return (
     <MainTemplate>
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold">Cotizaciones</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">Cotizaciones</h1>
             <p className="mt-1 text-sm text-gray-600">Aquí puedes generar y consultar cotizaciones.</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <button
               onClick={loadQuotes}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg shadow transition-colors disabled:opacity-50"
+              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg shadow transition-colors disabled:opacity-50 text-sm sm:text-base"
               title="Refrescar lista"
             >
               <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
-              Refrescar
+              <span className="hidden sm:inline">Refrescar</span>
             </button>
             <button
               onClick={() => navigate('/quotes/new')}
-              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg shadow hover:shadow-lg transition-shadow"
+              className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg shadow hover:shadow-lg transition-shadow text-sm sm:text-base whitespace-nowrap"
             >
               Crear cotización
             </button>
@@ -59,16 +59,16 @@ export default function QuotesPage() {
 
         {/* Barra de búsqueda mejorada */}
         <div className="mb-6">
-          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 border-2 border-blue-100 shadow-sm">
+          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-blue-100 shadow-sm">
             <div className="relative w-full">
-              <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                <Search className="text-blue-500" size={22} />
+              <div className="absolute inset-y-0 left-0 pl-3 sm:pl-5 flex items-center pointer-events-none">
+                <Search className="text-blue-500" size={20} />
               </div>
               <input
                 value={query}
                 onChange={e => setQuery(e.target.value)}
-                placeholder="Buscar por empresa, folio, cliente o vendedor..."
-                className="w-full pl-14 pr-14 py-4 text-base border-2 border-blue-200 rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all bg-white font-medium placeholder:text-gray-400"
+                placeholder="Buscar cotización..."
+                className="w-full pl-10 sm:pl-14 pr-12 sm:pr-14 py-3 sm:py-4 text-sm sm:text-base border-2 border-blue-200 rounded-lg sm:rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all bg-white font-medium placeholder:text-gray-400"
               />
               {query && (
                 <button
@@ -111,7 +111,7 @@ export default function QuotesPage() {
                     No se encontraron cotizaciones que coincidan con "{query}".
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     {qlc.map(q => (
                       <QuoteCard key={q.id || q.folio} quote={q} />
                     ))}

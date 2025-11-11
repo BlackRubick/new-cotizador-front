@@ -292,27 +292,27 @@ export default function ClientManager() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-cyan-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-cyan-50 p-4 sm:p-6">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-4">
-            <div className="p-4 bg-gradient-to-br from-med-primary to-med-primary-500 rounded-2xl shadow-lg">
-              <Building2 className="text-white" size={32} />
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="p-3 sm:p-4 bg-gradient-to-br from-med-primary to-med-primary-500 rounded-xl sm:rounded-2xl shadow-lg flex-shrink-0">
+              <Building2 className="text-white" size={24} />
             </div>
             <div>
-              <h2 className="text-4xl font-bold bg-gradient-to-r from-med-primary to-med-primary-500 bg-clip-text text-transparent">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-med-primary to-med-primary-500 bg-clip-text text-transparent">
                 Gestión de Clientes
               </h2>
-              <p className="text-gray-600 mt-1">
+              <p className="text-sm sm:text-base text-gray-600 mt-1">
                 {filteredClients.length} {filteredClients.length === 1 ? 'cliente registrado' : 'clientes registrados'}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <label className={`
-              relative flex items-center gap-2 px-4 py-3 rounded-xl font-medium text-sm
+              relative flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-medium text-xs sm:text-sm
               transition-all duration-300 cursor-pointer
               ${importing 
                 ? 'bg-gray-300 cursor-not-allowed' 
@@ -326,15 +326,16 @@ export default function ClientManager() {
                 className="hidden"
                 disabled={importing}
               />
-              <Upload size={20} />
-              <span>{importing ? 'Importando...' : 'Importar Excel'}</span>
+              <Upload size={16} className="sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">{importing ? 'Importando...' : 'Importar Excel'}</span>
+              <span className="sm:hidden">Importar</span>
             </label>
 
             <button 
               onClick={()=> navigate('/clients/new')} 
-              className="flex items-center gap-2 px-4 py-3 bg-med-primary text-white rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 font-medium"
+              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-med-primary text-white rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 font-medium text-xs sm:text-sm whitespace-nowrap"
             >
-              <UserPlus size={20} />
+              <UserPlus size={16} className="sm:w-5 sm:h-5" />
               <span>Nuevo Cliente</span>
             </button>
           </div>
@@ -342,36 +343,36 @@ export default function ClientManager() {
       </div>
 
       {/* Search and Filters */}
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="mb-4 sm:mb-6 grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
         <div className="md:col-span-2">
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="text-gray-400" size={20} />
+            <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
+              <Search className="text-gray-400" size={18} />
             </div>
             <input
               type="text"
-              className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white/80 backdrop-blur-sm shadow-md"
-              placeholder="Buscar por empresa, hospital, ciudad, equipo..."
+              className="w-full pl-10 sm:pl-12 pr-10 sm:pr-12 py-2.5 sm:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white/80 backdrop-blur-sm shadow-md"
+              placeholder="Buscar cliente..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600"
+                className="absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-gray-400 hover:text-gray-600"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             )}
           </div>
         </div>
 
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <Filter className="text-gray-400" size={20} />
+          <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
+            <Filter className="text-gray-400" size={18} />
           </div>
           <select
-            className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white/80 backdrop-blur-sm shadow-md appearance-none"
+            className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white/80 backdrop-blur-sm shadow-md appearance-none"
             value={filterEstado}
             onChange={e => setFilterEstado(e.target.value)}
           >
@@ -385,53 +386,53 @@ export default function ClientManager() {
 
       {/* Clients Grid */}
       {filteredClients.length === 0 ? (
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-12 text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-4">
-            <Building2 size={40} className="text-gray-400" />
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg border border-white/20 p-8 sm:p-12 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full mb-4">
+            <Building2 size={32} className="text-gray-400 sm:w-10 sm:h-10" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-700 mb-2">
             {searchQuery || filterEstado ? 'No se encontraron clientes' : 'No hay clientes registrados'}
           </h3>
-          <p className="text-gray-500">
+          <p className="text-sm sm:text-base text-gray-500">
             {searchQuery || filterEstado 
               ? 'Intenta ajustar los filtros de búsqueda'
               : 'Comienza agregando tu primer cliente'}
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {groups.map(g => {
             const statusBadge = null
             return (
               <div 
                 key={g.key} 
-                className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 hover:shadow-2xl transition-all duration-300 overflow-hidden"
+                className="group bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg border border-white/20 hover:shadow-2xl transition-all duration-300 overflow-hidden"
               >
                 {/* Header del Card */}
-                <div className="p-6 bg-gradient-to-r from-med-bg to-med-bg-100 border-b border-gray-200">
-                  <div className="flex justify-between items-start gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-start gap-3">
-                        <div className="p-2 bg-med-bg-100 rounded-lg">
-                          <Building2 className="text-med-primary" size={20} />
+                <div className="p-4 sm:p-6 bg-gradient-to-r from-med-bg to-med-bg-100 border-b border-gray-200">
+                  <div className="flex justify-between items-start gap-2 sm:gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <div className="p-1.5 sm:p-2 bg-med-bg-100 rounded-lg flex-shrink-0">
+                          <Building2 className="text-med-primary" size={18} />
                         </div>
-                        <div className="flex-1">
-                          <h3 className="font-bold text-gray-800 text-lg leading-tight">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-gray-800 text-base sm:text-lg leading-tight break-words">
                             {g.hospital}
                           </h3>
-                          <p className="text-sm text-gray-600 mt-1">{g.dependencias && g.dependencias[0]}</p>
-                          <p className="text-sm text-gray-500 mt-1">Empresa: {g.empresas && g.empresas[0]}</p>
+                          <p className="text-xs sm:text-sm text-gray-600 mt-1 truncate">{g.dependencias && g.dependencias[0]}</p>
+                          <p className="text-xs sm:text-sm text-gray-500 mt-1 truncate">Empresa: {g.empresas && g.empresas[0]}</p>
                         </div>
                       </div>
                     </div>
                     
                     {statusBadge && (
                       <span className={`
-                        flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold
+                        flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg text-xs font-semibold flex-shrink-0
                         bg-${statusBadge.color}-100 text-${statusBadge.color}-700 border border-${statusBadge.color}-200
                       `}>
                         {statusBadge.color === 'emerald' ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
-                        {statusBadge.text}
+                        <span className="hidden sm:inline">{statusBadge.text}</span>
                       </span>
                     )}
 
@@ -439,15 +440,15 @@ export default function ClientManager() {
                     <button
                       onClick={() => handleDelete(g.sample.id)}
                       title="Eliminar cliente representativo"
-                      className="ml-3 p-2 bg-white/60 hover:bg-red-50 rounded-full text-red-600 hover:text-red-700 transition-colors border border-transparent hover:border-red-100"
+                      className="p-1.5 sm:p-2 bg-white/60 hover:bg-red-50 rounded-full text-red-600 hover:text-red-700 transition-colors border border-transparent hover:border-red-100 flex-shrink-0"
                     >
-                      <Trash2 size={18} />
+                      <Trash2 size={16} className="sm:w-[18px] sm:h-[18px]" />
                     </button>
                   </div>
                 </div>
 
                 {/* Body del Card */}
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   {/* Ubicación */}
                   <div className="mb-4">
                     <div className="flex items-start gap-3 mb-2">
@@ -511,183 +512,183 @@ export default function ClientManager() {
       
       {/* MODAL MEJORADO */}
       {openGroup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fadeIn">
-          <div className="w-full max-w-5xl bg-white rounded-2xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col animate-slideUp">
-            {/* Header del Modal */}
-            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 p-6 text-white">
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-4 flex-1">
-                  <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                    <Building2 size={32} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4 animate-fadeIn">
+          <div className="w-full max-w-5xl bg-white rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl max-h-[95vh] sm:max-h-[90vh] flex flex-col animate-slideUp">
+            {/* Header del Modal - Compacto */}
+            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 p-3 sm:p-4 text-white flex-shrink-0">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
+                  <div className="p-2 sm:p-2.5 bg-white/20 rounded-lg backdrop-blur-sm flex-shrink-0">
+                    <Building2 size={20} className="sm:w-6 sm:h-6" />
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-2xl font-bold mb-2">{openGroup.hospital}</h3>
-                    <div className="space-y-1 text-blue-100 text-sm">
-                      <p className="flex items-center gap-2">
-                        <span className="font-semibold">Dependencias:</span> 
-                        {openGroup.dependencias.join(', ') || '-'}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg sm:text-xl font-bold mb-1 truncate">{openGroup.hospital}</h3>
+                    <div className="space-y-0.5 text-blue-100 text-xs sm:text-sm">
+                      <p className="flex items-center gap-1.5 truncate">
+                        <span className="font-semibold flex-shrink-0">Dependencias:</span> 
+                        <span className="truncate">{openGroup.dependencias.join(', ') || '-'}</span>
                       </p>
-                      <p className="flex items-center gap-2">
-                        <span className="font-semibold">Empresas:</span> 
-                        {openGroup.empresas.join(', ') || '-'}
+                      <p className="flex items-center gap-1.5 truncate">
+                        <span className="font-semibold flex-shrink-0">Empresas:</span> 
+                        <span className="truncate">{openGroup.empresas.join(', ') || '-'}</span>
                       </p>
-                      <p className="flex items-center gap-2">
-                        <MapPin size={14} className="inline" />
-                        {openGroup.sample?.ciudad}, {openGroup.sample?.estado}
+                      <p className="flex items-center gap-1.5 truncate">
+                        <MapPin size={12} className="inline flex-shrink-0" />
+                        <span className="truncate">{openGroup.sample?.ciudad}, {openGroup.sample?.estado}</span>
                       </p>
                     </div>
                   </div>
                 </div>
                 <button 
                   onClick={() => setOpenGroup(null)} 
-                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                  className="p-1.5 sm:p-2 hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
                 >
-                  <X size={24} />
+                  <X size={20} className="sm:w-6 sm:h-6" />
                 </button>
               </div>
             </div>
 
             {/* Body del Modal - Scrollable */}
-            <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-br from-slate-50 to-blue-50">
-              {/* Header de sección */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Package className="text-blue-600" size={24} />
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 bg-gradient-to-br from-slate-50 to-blue-50">
+              {/* Header de sección - Compacto */}
+              <div className="flex items-center justify-between mb-3 sm:mb-4 sticky top-0 bg-slate-50/90 backdrop-blur-sm py-2 -mx-3 px-3 sm:-mx-4 sm:px-4 md:-mx-6 md:px-6 z-10">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg">
+                    <Package size={18} className="text-blue-600 sm:w-5 sm:h-5 md:w-6 md:h-6" />
                   </div>
                   <div>
-                    <h4 className="text-xl font-bold text-gray-800">Inventario de Equipos</h4>
-                    <p className="text-sm text-gray-600">Total de {openGroup.equipos.length} equipos registrados</p>
+                    <h4 className="text-base sm:text-lg md:text-xl font-bold text-gray-800">Equipos</h4>
+                    <p className="text-xs sm:text-sm text-gray-600">{openGroup.equipos.length} registrados</p>
                   </div>
                 </div>
               </div>
 
               {/* Grid de Equipos */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
                 {openGroup.equipos.map((eq, i) => (
                   <div 
                     key={i} 
-                    className="bg-white rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 overflow-hidden"
+                    className="bg-white rounded-lg sm:rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 overflow-hidden"
                   >
-                    {/* Header de la tarjeta de equipo */}
-                    <div className="bg-gradient-to-r from-med-bg to-med-bg-100 px-4 py-3 border-b border-gray-200">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-start gap-3 flex-1">
-                          <div className="p-2 bg-med-bg-100 rounded-lg">
-                            <Wrench className="text-med-primary" size={18} />
+                    {/* Header de la tarjeta de equipo - Más compacto */}
+                    <div className="bg-gradient-to-r from-med-bg to-med-bg-100 px-3 sm:px-4 py-2 sm:py-2.5 border-b border-gray-200">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-start gap-2 flex-1 min-w-0">
+                          <div className="p-1.5 sm:p-2 bg-med-bg-100 rounded-md sm:rounded-lg flex-shrink-0">
+                            <Wrench className="text-med-primary" size={14} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h5 className="font-bold text-gray-800 text-base truncate">
+                            <h5 className="font-bold text-gray-800 text-sm sm:text-base truncate">
                               {eq.nombre || '(Sin nombre)'}
                             </h5>
-                            <p className="text-xs text-gray-500 mt-1">Equipo #{i + 1}</p>
+                            <p className="text-xs text-gray-500">Equipo #{i + 1}</p>
                           </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Contenido de la tarjeta */}
-                    <div className="p-4 space-y-3">
+                    <div className="p-2.5 sm:p-3 md:p-4 space-y-2 sm:space-y-2.5 md:space-y-3">
                       {editingEquipments[eq._clientId] ? (
                         // Edit form
-                        <div className="space-y-3">
-                          <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2 sm:space-y-2.5">
+                          <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
                             <input
-                              className="w-full p-2 border-2 border-gray-200 rounded-lg"
+                              className="w-full p-1.5 sm:p-2 text-sm border-2 border-gray-200 rounded-md sm:rounded-lg"
                               value={editingEquipments[eq._clientId].nombre || ''}
                               onChange={e => setEditingEquipments(prev => ({ ...prev, [eq._clientId]: { ...prev[eq._clientId], nombre: e.target.value } }))}
                               placeholder="Nombre del equipo"
                             />
                             <input
-                              className="w-full p-2 border-2 border-gray-200 rounded-lg"
+                              className="w-full p-1.5 sm:p-2 text-sm border-2 border-gray-200 rounded-md sm:rounded-lg"
                               value={editingEquipments[eq._clientId].marca || ''}
                               onChange={e => setEditingEquipments(prev => ({ ...prev, [eq._clientId]: { ...prev[eq._clientId], marca: e.target.value } }))}
                               placeholder="Marca"
                             />
                           </div>
 
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
                             <input
-                              className="w-full p-2 border-2 border-gray-200 rounded-lg"
+                              className="w-full p-1.5 sm:p-2 text-sm border-2 border-gray-200 rounded-md sm:rounded-lg"
                               value={editingEquipments[eq._clientId].modelo || ''}
                               onChange={e => setEditingEquipments(prev => ({ ...prev, [eq._clientId]: { ...prev[eq._clientId], modelo: e.target.value } }))}
                               placeholder="Modelo"
                             />
                             <input
-                              className="w-full p-2 border-2 border-gray-200 rounded-lg font-mono"
+                              className="w-full p-1.5 sm:p-2 text-sm border-2 border-gray-200 rounded-md sm:rounded-lg font-mono"
                               value={editingEquipments[eq._clientId].numeroSerie || ''}
                               onChange={e => setEditingEquipments(prev => ({ ...prev, [eq._clientId]: { ...prev[eq._clientId], numeroSerie: e.target.value } }))}
                               placeholder="Número de Serie"
                             />
                           </div>
 
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
                             <input
-                              className="w-full p-2 border-2 border-gray-200 rounded-lg"
+                              className="w-full p-1.5 sm:p-2 text-sm border-2 border-gray-200 rounded-md sm:rounded-lg"
                               value={editingEquipments[eq._clientId].fechaInstalacion || ''}
                               onChange={e => setEditingEquipments(prev => ({ ...prev, [eq._clientId]: { ...prev[eq._clientId], fechaInstalacion: e.target.value } }))}
                               placeholder="Fecha de Instalación"
                             />
                             <input
-                              className="w-full p-2 border-2 border-gray-200 rounded-lg"
+                              className="w-full p-1.5 sm:p-2 text-sm border-2 border-gray-200 rounded-md sm:rounded-lg"
                               value={editingEquipments[eq._clientId].ultimoMantenimiento || ''}
                               onChange={e => setEditingEquipments(prev => ({ ...prev, [eq._clientId]: { ...prev[eq._clientId], ultimoMantenimiento: e.target.value } }))}
                               placeholder="Último Mantenimiento"
                             />
                           </div>
 
-                          <div className="flex gap-2 justify-end">
-                            <button onClick={() => handleCancelEditEquipment(eq)} className="px-3 py-2 bg-gray-100 rounded-lg">Cancelar</button>
-                            <button onClick={() => handleSaveEquipment(eq)} className="px-3 py-2 bg-emerald-600 text-white rounded-lg">Guardar</button>
+                          <div className="flex gap-1.5 sm:gap-2 justify-end">
+                            <button onClick={() => handleCancelEditEquipment(eq)} className="px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm bg-gray-100 rounded-md sm:rounded-lg">Cancelar</button>
+                            <button onClick={() => handleSaveEquipment(eq)} className="px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm bg-emerald-600 text-white rounded-md sm:rounded-lg">Guardar</button>
                           </div>
                         </div>
                       ) : (
                         // Read-only view with Edit action
                         <>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="bg-gray-50 rounded-lg p-3">
-                              <div className="flex items-center gap-2 mb-1">
-                                <Tag size={14} className="text-med-primary" />
+                          <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+                            <div className="bg-gray-50 rounded-md sm:rounded-lg p-2 sm:p-2.5">
+                              <div className="flex items-center gap-1.5 mb-0.5">
+                                <Tag size={12} className="text-med-primary flex-shrink-0" />
                                 <span className="text-xs font-semibold text-gray-500 uppercase">Marca</span>
                               </div>
-                              <p className="text-sm font-bold text-gray-800 truncate">{eq.marca || 'N/A'}</p>
+                              <p className="text-xs sm:text-sm font-bold text-gray-800 truncate">{eq.marca || 'N/A'}</p>
                             </div>
-                            <div className="bg-gray-50 rounded-lg p-3">
-                              <div className="flex items-center gap-2 mb-1">
-                                <Tag size={14} className="text-med-primary" />
+                            <div className="bg-gray-50 rounded-md sm:rounded-lg p-2 sm:p-2.5">
+                              <div className="flex items-center gap-1.5 mb-0.5">
+                                <Tag size={12} className="text-med-primary flex-shrink-0" />
                                 <span className="text-xs font-semibold text-gray-500 uppercase">Modelo</span>
                               </div>
-                              <p className="text-sm font-bold text-gray-800 truncate">{eq.modelo || 'N/A'}</p>
+                              <p className="text-xs sm:text-sm font-bold text-gray-800 truncate">{eq.modelo || 'N/A'}</p>
                             </div>
                           </div>
 
-                          <div className="bg-gradient-to-r from-med-bg to-med-bg-100 rounded-lg p-3 border border-med-bg-100">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Hash size={14} className="text-med-primary" />
-                              <span className="text-xs font-semibold text-gray-600 uppercase">Número de Serie</span>
+                          <div className="bg-gradient-to-r from-med-bg to-med-bg-100 rounded-md sm:rounded-lg p-2 sm:p-2.5 border border-med-bg-100">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <Hash size={12} className="text-med-primary flex-shrink-0" />
+                              <span className="text-xs font-semibold text-gray-600 uppercase">N° Serie</span>
                             </div>
-                            <p className="text-sm font-mono font-bold text-med-slate-700">{eq.numeroSerie || 'Sin número de serie'}</p>
+                            <p className="text-xs sm:text-sm font-mono font-bold text-med-slate-700 truncate">{eq.numeroSerie || 'Sin número de serie'}</p>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="bg-emerald-50 rounded-lg p-3 border border-emerald-200">
-                              <div className="flex items-center gap-2 mb-1">
-                                <Calendar size={12} className="text-emerald-600" />
+                          <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+                            <div className="bg-emerald-50 rounded-md sm:rounded-lg p-2 sm:p-2.5 border border-emerald-200">
+                              <div className="flex items-center gap-1 mb-0.5">
+                                <Calendar size={10} className="text-emerald-600 flex-shrink-0" />
                                 <span className="text-xs font-semibold text-emerald-700 uppercase">Instalación</span>
                               </div>
-                              <p className="text-xs font-medium text-emerald-800">{eq.fechaInstalacion || 'No registrada'}</p>
+                              <p className="text-xs font-medium text-emerald-800 truncate">{eq.fechaInstalacion || 'No registrada'}</p>
                             </div>
-                            <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
-                              <div className="flex items-center gap-2 mb-1">
-                                <Wrench size={12} className="text-amber-600" />
-                                <span className="text-xs font-semibold text-amber-700 uppercase">Último Mant.</span>
+                            <div className="bg-amber-50 rounded-md sm:rounded-lg p-2 sm:p-2.5 border border-amber-200">
+                              <div className="flex items-center gap-1 mb-0.5">
+                                <Wrench size={10} className="text-amber-600 flex-shrink-0" />
+                                <span className="text-xs font-semibold text-amber-700 uppercase">Últ. Mant.</span>
                               </div>
-                              <p className="text-xs font-medium text-amber-800">{eq.ultimoMantenimiento || 'No registrado'}</p>
+                              <p className="text-xs font-medium text-amber-800 truncate">{eq.ultimoMantenimiento || 'No registrado'}</p>
                             </div>
                           </div>
 
-                          <div className="flex justify-end mt-2">
-                            <button onClick={() => handleStartEditEquipment(eq)} className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg">Editar</button>
+                          <div className="flex justify-end mt-1 sm:mt-2">
+                            <button onClick={() => handleStartEditEquipment(eq)} className="px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-blue-100 text-blue-700 rounded-md sm:rounded-lg">Editar</button>
                           </div>
                         </>
                       )}
@@ -697,32 +698,32 @@ export default function ClientManager() {
               </div>
 
               {/* Encargados del grupo */}
-              <div className="mt-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-cyan-100 rounded-lg">
-                    <User className="text-cyan-700" size={20} />
+              <div className="mt-4 sm:mt-5 md:mt-6">
+                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                  <div className="p-1.5 sm:p-2 bg-cyan-100 rounded-lg">
+                    <User className="text-cyan-700" size={16} />
                   </div>
                   <div>
-                    <h4 className="text-lg font-bold text-gray-800">Encargados ({openGroup.encargados?.length || 0})</h4>
-                    <p className="text-sm text-gray-600">Contactos asociados al grupo</p>
+                    <h4 className="text-base sm:text-lg font-bold text-gray-800">Encargados ({openGroup.encargados?.length || 0})</h4>
+                    <p className="text-xs sm:text-sm text-gray-600">Contactos asociados</p>
                   </div>
                 </div>
 
                 {openGroup.encargados && openGroup.encargados.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
                     {openGroup.encargados.map((enc, idx) => (
-                      <div key={enc.id || idx} className="p-3 bg-white rounded-xl border-2 border-gray-200">
-                        <div className="flex items-start justify-between gap-3">
+                      <div key={enc.id || idx} className="p-2.5 sm:p-3 bg-white rounded-lg sm:rounded-xl border-2 border-gray-200">
+                        <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <User className="text-gray-400" size={16} />
-                              <div className="font-semibold text-gray-800 truncate">{enc.nombre}</div>
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <User className="text-gray-400 flex-shrink-0" size={14} />
+                              <div className="font-semibold text-sm sm:text-base text-gray-800 truncate">{enc.nombre}</div>
                             </div>
-                            <div className="text-sm text-gray-600">
-                              {enc.cargo && (<div className="flex items-center gap-2"><Briefcase size={14} className="text-gray-400" /> <span>{enc.cargo}</span></div>)}
-                              <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
-                                {enc.telefono && (<div className="flex items-center gap-1"><Phone size={14} className="text-gray-400" /> <span>{enc.telefono}</span></div>)}
-                                {enc.email && (<div className="flex items-center gap-1"><Mail size={14} className="text-gray-400" /> <span className="truncate">{enc.email}</span></div>)}
+                            <div className="text-xs sm:text-sm text-gray-600">
+                              {enc.cargo && (<div className="flex items-center gap-1.5 mb-1"><Briefcase size={12} className="text-gray-400 flex-shrink-0" /> <span className="truncate">{enc.cargo}</span></div>)}
+                              <div className="flex flex-col gap-1 mt-1 text-xs text-gray-500">
+                                {enc.telefono && (<div className="flex items-center gap-1"><Phone size={12} className="text-gray-400 flex-shrink-0" /> <span>{enc.telefono}</span></div>)}
+                                {enc.email && (<div className="flex items-center gap-1"><Mail size={12} className="text-gray-400 flex-shrink-0" /> <span className="truncate">{enc.email}</span></div>)}
                               </div>
                             </div>
                           </div>
@@ -731,8 +732,8 @@ export default function ClientManager() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
-                    <p className="text-gray-600">No hay encargados agregados para este grupo</p>
+                  <div className="text-center py-4 sm:py-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                    <p className="text-xs sm:text-sm text-gray-600">No hay encargados agregados para este grupo</p>
                   </div>
                 )}
               </div>
@@ -749,13 +750,13 @@ export default function ClientManager() {
             </div>
 
             {/* Footer del Modal */}
-            <div className="bg-white border-t border-gray-200 px-6 py-4 flex items-center justify-between">
-              <div className="text-sm text-gray-600">
-                <span className="font-semibold">{openGroup.equipos.length}</span> equipos en total
+            <div className="bg-white border-t border-gray-200 px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 md:py-4 flex items-center justify-between flex-shrink-0">
+              <div className="text-xs sm:text-sm text-gray-600">
+                <span className="font-semibold">{openGroup.equipos.length}</span> equipos
               </div>
               <button 
                 onClick={() => setOpenGroup(null)} 
-                className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all transform hover:scale-105"
+                className="px-4 sm:px-5 md:px-6 py-1.5 sm:py-2 md:py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all transform hover:scale-105 text-sm sm:text-base"
               >
                 Cerrar
               </button>

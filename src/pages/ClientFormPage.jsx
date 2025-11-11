@@ -49,8 +49,8 @@ export default function ClientFormPage() {
   if (isLoading || !initial) {
     return (
       <MainTemplate>
-        <div className="p-6 flex items-center justify-center">
-          <div className="animate-pulse text-gray-500">Cargando...</div>
+        <div className="p-4 sm:p-6 flex items-center justify-center">
+          <div className="animate-pulse text-sm sm:text-base text-gray-500">Cargando...</div>
         </div>
       </MainTemplate>
     )
@@ -58,11 +58,11 @@ export default function ClientFormPage() {
 
   return (
     <MainTemplate>
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="mb-4">
-          <h1 className="text-2xl font-bold">{id ? 'Editar Cliente' : 'Crear Cliente'}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">{id ? 'Editar Cliente' : 'Crear Cliente'}</h1>
         </div>
-        <div className="bg-white p-6 rounded shadow">
+        <div className="bg-white p-4 sm:p-6 rounded-lg sm:rounded-xl shadow">
           <ClientForm initial={initial} onSave={handleSave} onCancel={() => navigate('/clients')} />
         </div>
       </div>

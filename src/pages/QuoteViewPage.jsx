@@ -636,136 +636,135 @@ export default function QuoteViewPage() {
 
   return (
     <MainTemplate>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-cyan-50 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-cyan-50 p-4 sm:p-6">
         {/* Header */}
         <div className="mb-6">
           <button 
             onClick={() => navigate('/quotes')}
-            className="flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-4 font-medium transition-colors"
+            className="flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-4 font-medium transition-colors text-sm sm:text-base"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={18} />
             Volver a Cotizaciones
           </button>
 
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-4">
-              <div className="p-4 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl shadow-lg">
-                <FileText className="text-white" size={32} />
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="p-3 sm:p-4 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl sm:rounded-2xl shadow-lg flex-shrink-0">
+                <FileText className="text-white" size={24} />
               </div>
-              <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
                   Cotización
                 </h1>
-                <p className="text-gray-600 mt-1 flex items-center gap-3">
-                  <span>Folio: {quote.folio || quote.id}</span>
-                  <span>· Creada el {quote.createdAt ? new Date(quote.createdAt).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }) : '—'}</span>
-                  <span>
-                    {/* Status badge */}
-                    {(() => {
-                      const s = quote.status || 'pending'
-                      const cls = s === 'approved' ? 'bg-emerald-100 text-emerald-700' : s === 'canceled' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'
-                      const label = s === 'approved' ? 'Aprobada' : s === 'canceled' ? 'Cancelada' : 'Pendiente'
-                      return (
-                        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${cls}`}>{label}</span>
-                      )
-                    })()}
-                  </span>
-                </p>
+                <div className="text-gray-600 mt-1 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 text-xs sm:text-sm">
+                  <span className="font-medium">Folio: {quote.folio || quote.id}</span>
+                  <span className="hidden sm:inline">·</span>
+                  <span className="hidden sm:inline">Creada el {quote.createdAt ? new Date(quote.createdAt).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }) : '—'}</span>
+                  <span className="sm:hidden">{quote.createdAt ? new Date(quote.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</span>
+                  {(() => {
+                    const s = quote.status || 'pending'
+                    const cls = s === 'approved' ? 'bg-emerald-100 text-emerald-700' : s === 'canceled' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'
+                    const label = s === 'approved' ? 'Aprobada' : s === 'canceled' ? 'Cancelada' : 'Pendiente'
+                    return (
+                      <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold ${cls} inline-block`}>{label}</span>
+                    )
+                  })()}
+                </div>
               </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3">
               <button 
                 onClick={handleEdit} 
-                className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 font-medium"
+                className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 font-medium text-sm sm:text-base flex-1 sm:flex-initial"
               >
-                <Edit3 size={18} />
-                Editar
+                <Edit3 size={16} className="sm:w-[18px] sm:h-[18px]" />
+                <span>Editar</span>
               </button>
               <button 
                 onClick={handleDelete} 
-                className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 font-medium"
+                className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 font-medium text-sm sm:text-base flex-1 sm:flex-initial"
               >
-                <Trash2 size={18} />
-                Eliminar
+                <Trash2 size={16} className="sm:w-[18px] sm:h-[18px]" />
+                <span>Eliminar</span>
               </button>
             </div>
           </div>
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Left Column - Client Info */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             {/* Client Card */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 px-6 py-4 border-b border-gray-200">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Building2 className="text-blue-600" size={20} />
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg border border-white/20 overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg">
+                    <Building2 className="text-blue-600" size={18} />
                   </div>
-                  <h3 className="text-lg font-bold text-gray-800">Información del Cliente</h3>
+                  <h3 className="text-base sm:text-lg font-bold text-gray-800">Información del Cliente</h3>
                 </div>
               </div>
 
-              <div className="p-6">
-                <div className="space-y-4">
+              <div className="p-4 sm:p-6">
+                <div className="space-y-3 sm:space-y-4">
                   <div>
-                    <h4 className="text-2xl font-bold text-gray-800 mb-1">
+                    <h4 className="text-xl sm:text-2xl font-bold text-gray-800 mb-1 break-words">
                       {quote.clientName || quote.razonSocial || 'Cliente sin nombre'}
                     </h4>
                     {quote.sellerCompany && (
-                      <p className="text-sm text-gray-500">
+                      <p className="text-xs sm:text-sm text-gray-500">
                         Empresa vendedora: <span className="font-semibold text-gray-700">{quote.sellerCompany}</span>
                       </p>
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                     {quote.clientContact && (
-                      <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                        <div className="p-2 bg-white rounded-lg">
-                          <User className="text-blue-600" size={18} />
+                      <div className="flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3 bg-gray-50 rounded-lg">
+                        <div className="p-1.5 sm:p-2 bg-white rounded-lg flex-shrink-0">
+                          <User className="text-blue-600" size={16} />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <div className="text-xs font-semibold text-gray-500 uppercase mb-1">Contacto</div>
-                          <div className="font-medium text-gray-800">{quote.clientContact}</div>
+                          <div className="font-medium text-sm sm:text-base text-gray-800 break-words">{quote.clientContact}</div>
                         </div>
                       </div>
                     )}
 
                     {quote.email && (
-                      <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                        <div className="p-2 bg-white rounded-lg">
-                          <Mail className="text-blue-600" size={18} />
+                      <div className="flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3 bg-gray-50 rounded-lg">
+                        <div className="p-1.5 sm:p-2 bg-white rounded-lg flex-shrink-0">
+                          <Mail className="text-blue-600" size={16} />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <div className="text-xs font-semibold text-gray-500 uppercase mb-1">Email</div>
-                          <div className="font-medium text-gray-800 break-all">{quote.email}</div>
+                          <div className="font-medium text-sm sm:text-base text-gray-800 break-all">{quote.email}</div>
                         </div>
                       </div>
                     )}
 
                     {quote.phone && (
-                      <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                        <div className="p-2 bg-white rounded-lg">
-                          <Phone className="text-blue-600" size={18} />
+                      <div className="flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3 bg-gray-50 rounded-lg">
+                        <div className="p-1.5 sm:p-2 bg-white rounded-lg flex-shrink-0">
+                          <Phone className="text-blue-600" size={16} />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <div className="text-xs font-semibold text-gray-500 uppercase mb-1">Teléfono</div>
-                          <div className="font-medium text-gray-800">{quote.phone}</div>
+                          <div className="font-medium text-sm sm:text-base text-gray-800">{quote.phone}</div>
                         </div>
                       </div>
                     )}
 
                     {quote.clientAddress && (
-                      <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg md:col-span-2">
-                        <div className="p-2 bg-white rounded-lg">
-                          <MapPin className="text-blue-600" size={18} />
+                      <div className="flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3 bg-gray-50 rounded-lg md:col-span-2">
+                        <div className="p-1.5 sm:p-2 bg-white rounded-lg flex-shrink-0">
+                          <MapPin className="text-blue-600" size={16} />
                         </div>
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <div className="text-xs font-semibold text-gray-500 uppercase mb-1">Dirección</div>
-                          <div className="font-medium text-gray-800">{quote.clientAddress}</div>
+                          <div className="font-medium text-sm sm:text-base text-gray-800 break-words">{quote.clientAddress}</div>
                         </div>
                       </div>
                     )}
@@ -780,22 +779,22 @@ export default function QuoteViewPage() {
             </div>
 
             {/* Products Card */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 px-6 py-4 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Package className="text-blue-600" size={20} />
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg border border-white/20 overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                      <Package className="text-blue-600" size={18} />
                     </div>
-                    <h3 className="text-lg font-bold text-gray-800">Productos y Servicios </h3>
+                    <h3 className="text-base sm:text-lg font-bold text-gray-800 truncate">Productos y Servicios </h3>
                   </div>
-                  <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
+                  <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-blue-100 text-blue-700 rounded-full text-xs sm:text-sm font-semibold whitespace-nowrap flex-shrink-0">
                     {(quote.products || []).length} {(quote.products || []).length === 1 ? 'producto' : 'productos'}
                   </span>
                 </div>
               </div>
 
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 {(quote.products || []).length > 0 ? (
                   <div className="space-y-3">
                     {(quote.products || []).map((p, i) => {
@@ -803,26 +802,26 @@ export default function QuoteViewPage() {
                       return (
                         <div 
                           key={p.id || i} 
-                          className="group bg-gradient-to-r from-gray-50 to-gray-100 hover:from-blue-50 hover:to-cyan-50 rounded-xl p-4 border-2 border-gray-200 hover:border-blue-300 transition-all duration-300"
+                          className="group bg-gradient-to-r from-gray-50 to-gray-100 hover:from-blue-50 hover:to-cyan-50 rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 border-gray-200 hover:border-blue-300 transition-all duration-300"
                         >
-                          <div className="flex items-start justify-between gap-4">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
                             <div className="flex-1">
-                              <div className="flex items-start gap-3">
-                                <div className="flex items-center justify-center w-16 h-16 bg-white rounded-lg border border-gray-200 group-hover:border-blue-300 transition-colors overflow-hidden">
+                              <div className="flex items-start gap-2 sm:gap-3">
+                                <div className="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-lg border border-gray-200 group-hover:border-blue-300 transition-colors overflow-hidden flex-shrink-0">
                                   {/* Imagen ocultada: se muestra solo el índice para mantener el layout */}
-                                  <span className="font-bold text-blue-600">#{i + 1}</span>
+                                  <span className="font-bold text-blue-600 text-sm sm:text-base">#{i + 1}</span>
                                 </div>
-                                <div className="flex-1">
-                                  <h5 className="font-bold text-gray-800 text-base mb-1">
+                                <div className="flex-1 min-w-0">
+                                  <h5 className="font-bold text-gray-800 text-sm sm:text-base mb-1 break-words">
                                     {p.name || 'Producto sin nombre'}
                                   </h5>
                                   {p.code && (
-                                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                                    <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
                                       <Hash size={12} />
-                                      <span>Código: {p.code}</span>
+                                      <span className="truncate">Código: {p.code}</span>
                                     </div>
                                   )}
-                                  <div className="flex items-center gap-4 mt-2 text-sm">
+                                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm">
                                     <div className="flex items-center gap-1">
                                       <span className="text-gray-500">Cantidad:</span>
                                       <span className="font-semibold text-gray-700">{p.quantity}</span>
@@ -835,9 +834,9 @@ export default function QuoteViewPage() {
                                 </div>
                               </div>
                             </div>
-                            <div className="text-right">
+                            <div className="text-left sm:text-right pl-14 sm:pl-0 border-t sm:border-t-0 pt-2 sm:pt-0 border-gray-200">
                               <div className="text-xs font-semibold text-gray-500 uppercase mb-1">Subtotal</div>
-                              <div className="text-xl font-black text-blue-600">
+                              <div className="text-lg sm:text-xl font-black text-blue-600">
                                 ${subtotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                               </div>
                             </div>
@@ -848,8 +847,8 @@ export default function QuoteViewPage() {
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <Package size={48} className="mx-auto text-gray-300 mb-3" />
-                    <p className="text-gray-500 font-medium">No hay productos en esta cotización</p>
+                    <Package size={40} className="mx-auto text-gray-300 mb-3 sm:w-12 sm:h-12" />
+                    <p className="text-gray-500 font-medium text-sm sm:text-base">No hay productos en esta cotización</p>
                   </div>
                 )}
               </div>
@@ -857,17 +856,17 @@ export default function QuoteViewPage() {
 
             {/* Terms Card */}
             {quote.terms && (
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden">
-                <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gray-200 rounded-lg">
-                      <FileText className="text-gray-600" size={20} />
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg border border-white/20 overflow-hidden">
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="p-1.5 sm:p-2 bg-gray-200 rounded-lg">
+                      <FileText className="text-gray-600" size={18} />
                     </div>
-                    <h3 className="text-lg font-bold text-gray-800">Términos y Condiciones</h3>
+                    <h3 className="text-base sm:text-lg font-bold text-gray-800">Términos y Condiciones</h3>
                   </div>
                 </div>
-                <div className="p-6">
-                  <p className="text-gray-700 whitespace-pre-wrap">{quote.terms}</p>
+                <div className="p-4 sm:p-6">
+                  <p className="text-sm sm:text-base text-gray-700 whitespace-pre-wrap">{quote.terms}</p>
                 </div>
               </div>
             )}
@@ -875,26 +874,26 @@ export default function QuoteViewPage() {
 
           {/* Right Column - Summary */}
           <div className="lg:col-span-1">
-            <div className="sticky top-6 space-y-6">
+            <div className="lg:sticky lg:top-6 space-y-4 sm:space-y-6">
               {/* Total Card */}
-              <div className="bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl shadow-2xl p-6 text-white overflow-hidden relative">
+              <div className="bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 text-white overflow-hidden relative">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12"></div>
                 
                 <div className="relative">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                      <DollarSign size={28} />
+                  <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                    <div className="p-2 sm:p-3 bg-white/20 rounded-lg sm:rounded-xl backdrop-blur-sm flex-shrink-0">
+                      <DollarSign size={20} className="sm:w-7 sm:h-7" />
                     </div>
-                    <h3 className="text-xl font-bold">Total de la Cotización</h3>
+                    <h3 className="text-lg sm:text-xl font-bold">Total de la Cotización</h3>
                   </div>
 
-                  <div className="mb-6">
-                    <div className="text-sm text-blue-100 mb-2">Monto Total</div>
-                    <div className="text-5xl font-black mb-2">
+                  <div className="mb-4 sm:mb-6">
+                    <div className="text-xs sm:text-sm text-blue-100 mb-1 sm:mb-2">Monto Total</div>
+                    <div className="text-3xl sm:text-4xl lg:text-5xl font-black mb-1 sm:mb-2 break-all">
                       ${Number(quote.total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                     </div>
-                    <div className="text-sm text-blue-100">MXN (Pesos Mexicanos)</div>
+                    <div className="text-xs sm:text-sm text-blue-100">MXN (Pesos Mexicanos)</div>
                   </div>
 
                   <div className="space-y-3 pt-4 border-t border-white/20">
@@ -916,12 +915,12 @@ export default function QuoteViewPage() {
               </div>
 
               {/* Date Card */}
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Calendar className="text-blue-600" size={20} />
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg border border-white/20 p-4 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                  <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg">
+                    <Calendar className="text-blue-600" size={18} />
                   </div>
-                  <h3 className="font-bold text-gray-800">Información de Fecha</h3>
+                  <h3 className="text-sm sm:text-base font-bold text-gray-800">Información de Fecha</h3>
                 </div>
                 
                 <div className="space-y-3">
@@ -949,42 +948,42 @@ export default function QuoteViewPage() {
               </div>
 
               {/* Actions Card */}
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
-                <h3 className="font-bold text-gray-800 mb-4">Acciones Rápidas</h3>
-                <div className="space-y-3">
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg border border-white/20 p-4 sm:p-6">
+                <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-3 sm:mb-4">Acciones Rápidas</h3>
+                <div className="space-y-2 sm:space-y-3">
                   {/* Visualizar PDF */}
                   <button 
                     onClick={handleViewPDF}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl font-medium hover:shadow-lg transition-all transform hover:scale-105"
+                    className="w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg sm:rounded-xl font-medium hover:shadow-lg transition-all transform hover:scale-105 text-sm sm:text-base"
                   >
-                    <Eye size={18} />
+                    <Eye size={16} className="sm:w-[18px] sm:h-[18px]" />
                     Visualizar PDF
                   </button>
 
                   {/* Enviar por Correo */}
                   <button 
                     onClick={handleSendEmail}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-xl font-medium hover:shadow-lg transition-all transform hover:scale-105"
+                    className="w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg sm:rounded-xl font-medium hover:shadow-lg transition-all transform hover:scale-105 text-sm sm:text-base"
                   >
-                    <Mail size={18} />
+                    <Mail size={16} className="sm:w-[18px] sm:h-[18px]" />
                     Enviar por Correo
                   </button>
 
                   {/* Enviar por WhatsApp */}
                   <button 
                     onClick={handleSendWhatsApp}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-medium hover:shadow-lg transition-all transform hover:scale-105"
+                    className="w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg sm:rounded-xl font-medium hover:shadow-lg transition-all transform hover:scale-105 text-sm sm:text-base"
                   >
-                    <MessageCircle size={18} />
+                    <MessageCircle size={16} className="sm:w-[18px] sm:h-[18px]" />
                     Enviar por WhatsApp
                   </button>
 
                   {/* Separador */}
-                  <div className="border-t border-gray-200 pt-3">
+                  <div className="border-t border-gray-200 pt-2 sm:pt-3">
                     <button 
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-gray-700 to-gray-900 text-white rounded-xl font-medium hover:shadow-lg transition-all transform hover:scale-105"
+                      className="w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-gradient-to-r from-gray-700 to-gray-900 text-white rounded-lg sm:rounded-xl font-medium hover:shadow-lg transition-all transform hover:scale-105 text-sm sm:text-base"
                     >
-                      <Download size={18} />
+                      <Download size={16} className="sm:w-[18px] sm:h-[18px]" />
                       Descargar PDF
                     </button>
                   </div>

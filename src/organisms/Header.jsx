@@ -52,17 +52,17 @@ export default function Header() {
 
   return (
     <header className="relative bg-white/90 backdrop-blur-lg shadow-xl border-b-2 border-blue-100 sticky top-0 z-50">
-      <div className="w-full px-6 py-3">
+      <div className="w-full px-4 sm:px-6 py-3">
         <div className="flex items-center justify-between">
           {/* Logo/Brand Section - LEFT */}
           <div className="flex items-center">
             <Link to="/home" className="group" aria-label="Ir al inicio">
-              <h1 className="text-3xl font-black bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent group-hover:from-cyan-600 group-hover:to-blue-600 transition-all duration-300">
+              <h1 className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent group-hover:from-cyan-600 group-hover:to-blue-600 transition-all duration-300">
                 COTIZADOR
               </h1>
               <div className="flex gap-1 mt-0">
-                <div className="h-1 w-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full group-hover:w-12 transition-all duration-300"></div>
-                <div className="h-1 w-8 bg-gradient-to-r from-cyan-600 to-blue-400 rounded-full group-hover:w-12 transition-all duration-300"></div>
+                <div className="h-1 w-6 sm:w-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full group-hover:w-10 sm:group-hover:w-12 transition-all duration-300"></div>
+                <div className="h-1 w-6 sm:w-8 bg-gradient-to-r from-cyan-600 to-blue-400 rounded-full group-hover:w-10 sm:group-hover:w-12 transition-all duration-300"></div>
               </div>
             </Link>
           </div>

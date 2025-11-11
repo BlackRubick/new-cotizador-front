@@ -18,8 +18,8 @@ const InputField = ({ label, value, onChange, placeholder, icon: Icon, error, ty
       {label}
     </label>
     <div className="relative">
-      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <Icon className={`${error ? 'text-red-400' : 'text-gray-400'} transition-colors`} size={16} />
+      <div className="absolute inset-y-0 left-0 pl-2.5 sm:pl-3 flex items-center pointer-events-none">
+        <Icon className={`${error ? 'text-red-400' : 'text-gray-400'} transition-colors`} size={14} />
       </div>
       <input
         type={type}
@@ -28,7 +28,7 @@ const InputField = ({ label, value, onChange, placeholder, icon: Icon, error, ty
         onKeyPress={onKeyPress}
         placeholder={placeholder}
         className={`
-          w-full pl-9 pr-3 py-2.5 text-sm rounded-lg transition-all
+          w-full pl-8 sm:pl-9 pr-2.5 sm:pr-3 py-2 sm:py-2.5 text-sm rounded-lg transition-all
           ${error
             ? 'border-2 border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-200 bg-red-50'
             : 'border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white'
@@ -38,7 +38,7 @@ const InputField = ({ label, value, onChange, placeholder, icon: Icon, error, ty
     </div>
     {error && (
       <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
-        <AlertCircle size={12} />
+        <AlertCircle size={10} />
         {error}
       </p>
     )}
@@ -118,17 +118,17 @@ function EncargadosManager({ value = [], onChange }) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {/* Formulario de Agregar */}
-      <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-4 rounded-xl border-2 border-blue-100">
+      <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 border-blue-100">
         <div className="flex items-center gap-2 mb-3">
           <div className="p-1.5 bg-blue-100 rounded-lg">
-            <UserPlus className="text-blue-600" size={18} />
+            <UserPlus className="text-blue-600" size={16} />
           </div>
           <h4 className="font-semibold text-gray-800 text-sm">Agregar Encargado</h4>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mb-3">
           <InputField
             label="Nombre completo *"
             name="enc_nombre"
@@ -175,9 +175,9 @@ function EncargadosManager({ value = [], onChange }) {
         <button 
           type="button"
           onClick={addEncargado}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-medium text-sm"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-medium text-sm"
         >
-          <UserPlus size={18} />
+          <UserPlus size={16} />
           <span>Agregar Encargado</span>
         </button>
       </div>
@@ -186,9 +186,9 @@ function EncargadosManager({ value = [], onChange }) {
       {lista.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center justify-between mb-2">
-            <h4 className="font-semibold text-gray-700 text-sm flex items-center gap-2">
-              <CheckCircle2 className="text-green-600" size={18} />
-              Encargados agregados ({lista.length})
+            <h4 className="font-semibold text-gray-700 text-sm flex items-center gap-1.5 sm:gap-2">
+              <CheckCircle2 className="text-green-600 flex-shrink-0" size={16} />
+              <span className="truncate">Encargados agregados ({lista.length})</span>
             </h4>
           </div>
 
@@ -196,44 +196,44 @@ function EncargadosManager({ value = [], onChange }) {
             {lista.map((encargado, index) => (
               <div 
                 key={encargado.id} 
-                className="group bg-white border-2 border-gray-200 rounded-xl p-4 hover:border-blue-300 hover:shadow-md transition-all duration-200"
+                className="group bg-white border-2 border-gray-200 rounded-lg sm:rounded-xl p-3 sm:p-4 hover:border-blue-300 hover:shadow-md transition-all duration-200"
               >
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start justify-between gap-2 sm:gap-4">
                   {/* Info Principal */}
-                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                  <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
                     {/* Avatar con número */}
-                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center font-bold text-blue-700">
+                    <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center font-bold text-blue-700 text-sm sm:text-base">
                       {index + 1}
                     </div>
 
                     {/* Datos del encargado */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <User className="text-gray-400 flex-shrink-0" size={16} />
-                        <h5 className="font-semibold text-gray-800 truncate">
+                      <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
+                        <User className="text-gray-400 flex-shrink-0" size={14} />
+                        <h5 className="font-semibold text-gray-800 truncate text-sm sm:text-base">
                           {encargado.nombre}
                         </h5>
                       </div>
 
                       <div className="space-y-1">
                         {encargado.cargo && (
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Briefcase className="text-gray-400 flex-shrink-0" size={14} />
+                          <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-600">
+                            <Briefcase className="text-gray-400 flex-shrink-0" size={12} />
                             <span className="truncate">{encargado.cargo}</span>
                           </div>
                         )}
 
-                        <div className="flex flex-wrap gap-3">
+                        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-1 sm:gap-3">
                           {encargado.telefono && (
-                            <div className="flex items-center gap-1.5 text-sm text-gray-600">
-                              <Phone className="text-gray-400 flex-shrink-0" size={14} />
+                            <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-600">
+                              <Phone className="text-gray-400 flex-shrink-0" size={12} />
                               <span>{encargado.telefono}</span>
                             </div>
                           )}
 
                           {encargado.email && (
-                            <div className="flex items-center gap-1.5 text-sm text-gray-600">
-                              <Mail className="text-gray-400 flex-shrink-0" size={14} />
+                            <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-600">
+                              <Mail className="text-gray-400 flex-shrink-0" size={12} />
                               <span className="truncate">{encargado.email}</span>
                             </div>
                           )}
@@ -245,10 +245,10 @@ function EncargadosManager({ value = [], onChange }) {
                   {/* Botón Eliminar */}
                   <button
                     onClick={() => removeEncargado(encargado.id)}
-                    className="flex-shrink-0 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    className="flex-shrink-0 p-1.5 sm:p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     title="Eliminar encargado"
                   >
-                    <Trash2 size={18} />
+                    <Trash2 size={16} />
                   </button>
                 </div>
               </div>
@@ -259,12 +259,12 @@ function EncargadosManager({ value = [], onChange }) {
 
       {/* Estado vacío */}
       {lista.length === 0 && (
-        <div className="text-center py-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
-          <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-200 rounded-full mb-3">
-            <User className="text-gray-400" size={24} />
+        <div className="text-center py-6 sm:py-8 bg-gray-50 rounded-lg sm:rounded-xl border-2 border-dashed border-gray-300">
+          <div className="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-full mb-2 sm:mb-3">
+            <User className="text-gray-400" size={20} />
           </div>
-          <p className="text-gray-600 font-medium">No hay encargados agregados</p>
-          <p className="text-gray-500 text-sm mt-1">Agrega al menos un encargado para este cliente</p>
+          <p className="text-gray-600 font-medium text-sm sm:text-base">No hay encargados agregados</p>
+          <p className="text-gray-500 text-xs sm:text-sm mt-1 px-4">Agrega al menos un encargado para este cliente</p>
         </div>
       )}
     </div>

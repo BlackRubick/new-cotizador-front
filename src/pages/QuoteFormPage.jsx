@@ -20,11 +20,11 @@ export default function QuoteFormPage() {
 
   return (
     <MainTemplate>
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="mb-4">
-          <h1 className="text-2xl font-bold">{initial ? 'Editar Cotización' : 'Crear Cotización'}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">{initial ? 'Editar Cotización' : 'Crear Cotización'}</h1>
         </div>
-        <div className="bg-white p-6 rounded shadow">
+        <div className="bg-white p-4 sm:p-6 rounded-lg sm:rounded-xl shadow">
           <QuoteForm onCreated={handleCreated} initial={initial} onUpdated={handleUpdated} />
         </div>
       </div>

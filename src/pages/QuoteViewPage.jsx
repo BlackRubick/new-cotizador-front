@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import MainTemplate from '../templates/MainTemplate'
 import quoteService from '../services/quoteService'
+import pdfService from '../services/pdfService'
 import { 
   DollarSign, 
   Calendar, 
@@ -16,7 +17,10 @@ import {
   Building2,
   Hash,
   ArrowLeft,
-  Download
+  Download,
+  Eye,
+  Send,
+  MessageCircle
 } from 'lucide-react'
 // Product images hidden in Quotes view per user request
 import { confirmDialog, alertError } from '../utils/swal'
@@ -80,6 +84,65 @@ export default function QuoteViewPage() {
       console.error('Error updating status', e)
       await alertError('Error actualizando el estado')
     }
+  }
+
+  function handleViewPDF() {
+    if (!quote) return
+    
+    // Mapeo de empresas a plantillas y datos completos
+    const companyData = {
+      'CONDUIT LIFE': {
+        template: 'CONDUIT-LIFE.jpeg',
+        name: 'CONDUIT LIFE',
+        fullName: 'CONDUIT LIFE',
+        address: 'Calle Principal #123, Col. Centro, Ciudad, Estado, C.P. 12345',
+        rfc: 'CLF123456ABC'
+      },
+      'BIOSYSTEMS HLS': {
+        template: 'Biosystems-HLS.jpeg',
+        name: 'BIOSYSTEMS HLS',
+        fullName: 'BIOSYSTEMS HLS',
+        address: 'Av. Tecnológico #456, Col. Industrial, Ciudad, Estado, C.P. 54321',
+        rfc: 'BHS789012DEF'
+      },
+      'INGENIERÍA CLÍNICA Y DISEÑO': {
+        template: 'INGENIERIA-CLINICA-DISEÑO.jpeg',
+        name: 'INGENIERÍA CLÍNICA Y DISEÑO',
+        fullName: 'INGENIERÍA CLÍNICA Y DISEÑO S.A. DE C.V.',
+        address: 'Boulevard Innovación #789, Col. Empresarial, Ciudad, Estado, C.P. 67890',
+        rfc: 'ICD345678GHI'
+      },
+      'ESCALA BIOMÉDICA': {
+        template: 'ESCALA-BIOMEDICA.jpeg',
+        name: 'ESCALA BIOMÉDICA',
+        fullName: 'ESCALA BIOMÉDICA',
+        address: 'Calle Salud #321, Col. Médica, Ciudad, Estado, C.P. 09876',
+        rfc: 'EBM901234JKL'
+      }
+    }
+    
+    // Obtener la empresa según el nombre
+    const companyName = (quote.sellerCompany || '').toUpperCase()
+    const company = companyData[companyName]
+    
+    // Preparar datos de la empresa vendedora
+    const sellerCompany = company ? {
+      name: company.name,
+      fullName: company.fullName,
+      address: company.address,
+      rfc: company.rfc
+    } : {
+      name: quote.sellerCompany || 'Empresa Vendedora',
+      fullName: quote.sellerCompany || 'Empresa Vendedora',
+      address: '',
+      rfc: ''
+    }
+    
+    // Preparar templatePath
+    const templatePath = company ? `/plantillas/${company.template}` : null
+    
+    // Abrir el PDF en una nueva ventana con la plantilla
+    pdfService.openQuoteInPrintWindow(quote, sellerCompany, { templatePath })
   }
 
   return (
@@ -400,27 +463,50 @@ export default function QuoteViewPage() {
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
                 <h3 className="font-bold text-gray-800 mb-4">Acciones Rápidas</h3>
                 <div className="space-y-3">
+                  {/* Visualizar PDF */}
                   <button 
+                    onClick={handleViewPDF}
                     className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl font-medium hover:shadow-lg transition-all transform hover:scale-105"
                   >
-                    <Download size={18} />
-                    Descargar PDF
+                    <Eye size={18} />
+                    Visualizar PDF
                   </button>
+
+                  {/* Enviar por Correo */}
                   <button 
-                    onClick={() => navigator.clipboard.writeText(window.location.href)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-xl font-medium hover:shadow-lg transition-all transform hover:scale-105"
                   >
-                    <FileText size={18} />
-                    Copiar Enlace
+                    <Mail size={18} />
+                    Enviar por Correo
                   </button>
-                    <div className="pt-3">
-                      <div className="text-sm font-semibold text-gray-500 mb-2">Cambiar Estado</div>
-                      <div className="flex gap-2">
-                        <button onClick={() => handleChangeStatus('pending')} className="flex-1 px-3 py-2 bg-amber-100 text-amber-800 rounded-lg font-medium hover:opacity-90">Pendiente</button>
-                        <button onClick={() => handleChangeStatus('approved')} className="flex-1 px-3 py-2 bg-emerald-100 text-emerald-800 rounded-lg font-medium hover:opacity-90">Aprobada</button>
-                        <button onClick={() => handleChangeStatus('canceled')} className="flex-1 px-3 py-2 bg-rose-100 text-rose-800 rounded-lg font-medium hover:opacity-90">Cancelada</button>
-                      </div>
+
+                  {/* Enviar por WhatsApp */}
+                  <button 
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-medium hover:shadow-lg transition-all transform hover:scale-105"
+                  >
+                    <MessageCircle size={18} />
+                    Enviar por WhatsApp
+                  </button>
+
+                  {/* Separador */}
+                  <div className="border-t border-gray-200 pt-3">
+                    <button 
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-gray-700 to-gray-900 text-white rounded-xl font-medium hover:shadow-lg transition-all transform hover:scale-105"
+                    >
+                      <Download size={18} />
+                      Descargar PDF
+                    </button>
+                  </div>
+
+                  {/* Cambiar Estado */}
+                  <div className="pt-3 border-t border-gray-200">
+                    <div className="text-sm font-semibold text-gray-500 mb-2">Cambiar Estado</div>
+                    <div className="flex gap-2">
+                      <button onClick={() => handleChangeStatus('pending')} className="flex-1 px-3 py-2 bg-amber-100 text-amber-800 rounded-lg font-medium hover:opacity-90">Pendiente</button>
+                      <button onClick={() => handleChangeStatus('approved')} className="flex-1 px-3 py-2 bg-emerald-100 text-emerald-800 rounded-lg font-medium hover:opacity-90">Aprobada</button>
+                      <button onClick={() => handleChangeStatus('canceled')} className="flex-1 px-3 py-2 bg-rose-100 text-rose-800 rounded-lg font-medium hover:opacity-90">Cancelada</button>
                     </div>
+                  </div>
                 </div>
               </div>
             </div>

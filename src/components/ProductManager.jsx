@@ -119,6 +119,8 @@ export default function ProductManager() {
 
   async function addProductToDraft(p) {
     try {
+      console.log('Adding product to draft:', p)
+      console.log('Product apiId:', p.apiId, 'Product id:', p.id)
       const raw = sessionStorage.getItem('quote_draft')
       if (!raw) {
         await alertInfo('No hay una cotización activa. Abre el formulario de cotización primero.')
@@ -143,11 +145,13 @@ export default function ProductManager() {
       } else {
         const newItem = {
           id: Date.now(),
-          code: p.id,
+          productId: p.apiId || p.id,
+          code: p.codigo || p.code || '',
           name: p.descripcion || `${p.marca || ''} ${p.modelo || ''}`.trim(),
           quantity: 1,
           basePrice: priceRounded
         }
+        console.log('New item to add:', newItem)
         draft.products.push(newItem)
       }
       sessionStorage.setItem('quote_draft', JSON.stringify(draft))

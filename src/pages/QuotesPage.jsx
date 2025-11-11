@@ -2,23 +2,33 @@ import React, { useEffect, useState } from 'react'
 import MainTemplate from '../templates/MainTemplate'
 import quoteService from '../services/quoteService'
 import QuoteCard from '../components/QuoteCard'
-import { useNavigate } from 'react-router-dom'
-import { Search, X } from 'lucide-react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { Search, X, RefreshCw } from 'lucide-react'
 
 export default function QuotesPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [quotes, setQuotes] = useState([])
   const [query, setQuery] = useState('')
+  const [loading, setLoading] = useState(false)
 
+  // Función para cargar cotizaciones
+  const loadQuotes = async () => {
+    setLoading(true)
+    const list = await quoteService.listQuotes()
+    setQuotes(list || [])
+    setLoading(false)
+  }
+
+  // Cargar al montar
   useEffect(() => {
-    let mounted = true
-    async function load() {
-      const list = await quoteService.listQuotes()
-      if (mounted) setQuotes(list || [])
-    }
-    load()
-    return () => { mounted = false }
+    loadQuotes()
   }, [])
+
+  // Recargar cada vez que se navega a esta ruta (incluyendo con botón atrás)
+  useEffect(() => {
+    loadQuotes()
+  }, [location.pathname, location.key])
 
   return (
     <MainTemplate>
@@ -28,10 +38,19 @@ export default function QuotesPage() {
             <h1 className="text-2xl font-bold">Cotizaciones</h1>
             <p className="mt-1 text-sm text-gray-600">Aquí puedes generar y consultar cotizaciones.</p>
           </div>
-          <div>
+          <div className="flex gap-3">
+            <button
+              onClick={loadQuotes}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg shadow transition-colors disabled:opacity-50"
+              title="Refrescar lista"
+            >
+              <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+              Refrescar
+            </button>
             <button
               onClick={() => navigate('/quotes/new')}
-              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg shadow"
+              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg shadow hover:shadow-lg transition-shadow"
             >
               Crear cotización
             </button>

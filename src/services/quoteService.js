@@ -20,6 +20,10 @@ function generateFolio(prefix = 'Q', length = 6) {
  */
 export async function createQuote(quoteData) {
   try {
+    console.log('=== createQuote called ===')
+    console.log('quoteData received:', quoteData)
+    console.log('products in quoteData:', quoteData.products)
+    
     // Parsear clientId - puede venir como string compuesto "123-456" o número
     let parsedClientId = null
     if (quoteData.clientId) {
@@ -42,16 +46,21 @@ export async function createQuote(quoteData) {
       sellerCompanyId: companyIdMap[quoteData.sellerCompanyId] || null,
       clientId: parsedClientId,
       sellerId: quoteData.sellerId || null,
-      status: quoteData.status || 'draft',
+      status: quoteData.status || 'pendiente',
       taxes: quoteData.taxes || 0,
-      products: (quoteData.products || []).map(p => ({
-        productId: typeof p.code === 'number' ? p.code : null,
-        description: p.name || p.descripcion || '-',
-        qty: Number(p.quantity || 1),
-        unitPrice: Number(p.basePrice || 0),
-        discount: Number(p.discount || 0)
-      }))
+      products: (quoteData.products || []).map(p => {
+        console.log('Mapping product in createQuote:', p)
+        return {
+          productId: p.productId || null,
+          description: p.name || p.descripcion || '-',
+          qty: Number(p.quantity || 1),
+          unitPrice: Number(p.basePrice || 0),
+          discount: Number(p.discount || 0)
+        }
+      })
     }
+    
+    console.log('API Data to send:', JSON.stringify(apiData, null, 2))
     
     const response = await post('/quotes', apiData)
     
@@ -115,7 +124,7 @@ function mapApiQuoteToFrontend(apiQuote) {
     // Mapear items a products para compatibilidad con el frontend
     products: (apiQuote.items || []).map(item => ({
       id: item.id,
-      code: item.productId,
+      code: item.product?.code || item.productId,
       name: item.description,
       quantity: item.qty,
       basePrice: item.unitPrice,
@@ -148,7 +157,9 @@ export async function updateQuote(id, newData) {
     }
     
     const response = await put(`/quotes/${id}`, apiData)
-    return { success: true, data: response.data }
+    // Mapear la respuesta al formato del frontend
+    const mappedData = mapApiQuoteToFrontend(response.data)
+    return { success: true, data: mappedData }
   } catch (error) {
     console.error('Error al actualizar cotización:', error)
     return { success: false, error: error.message }

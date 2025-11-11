@@ -32,9 +32,25 @@ export default function QuoteCard({ quote }) {
   const totalWithIVA = (Number(total || 0) * 1.16).toLocaleString('es-MX', { minimumFractionDigits: 2 })
   const navigate = useNavigate()
 
+  // Función para traducir el status al español
+  const getStatusLabel = (status) => {
+    const statusLower = (status || '').toLowerCase()
+    
+    // Aprobada/Confirmada
+    if (statusLower.includes('approved') || statusLower.includes('confirm') || statusLower.includes('aprob') || statusLower.includes('acept')) {
+      return 'Aprobada'
+    }
+    // Cancelada/Rechazada
+    if (statusLower.includes('rechaz') || statusLower.includes('cancel')) {
+      return 'Cancelada'
+    }
+    // Pendiente (por defecto)
+    return 'Pendiente'
+  }
+
   const getStatusStyle = (status) => {
     const statusLower = (status || '').toLowerCase()
-    if (statusLower.includes('confirm') || statusLower.includes('aprob') || statusLower.includes('acept')) {
+    if (statusLower.includes('approved') || statusLower.includes('confirm') || statusLower.includes('aprob') || statusLower.includes('acept')) {
       return {
         bg: 'bg-emerald-100',
         text: 'text-emerald-700',
@@ -59,6 +75,7 @@ export default function QuoteCard({ quote }) {
   }
 
   const statusStyle = getStatusStyle(status)
+  const statusLabel = getStatusLabel(status)
 
   async function handleDelete() {
     if (!(await confirmDialog('¿Eliminar esta cotización? Esta acción no se puede deshacer.'))) return
@@ -74,42 +91,40 @@ export default function QuoteCard({ quote }) {
     <div className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border-2 border-white/20 hover:shadow-2xl hover:border-blue-200 transition-all duration-300 overflow-hidden">
       {/* Header con gradiente */}
       <div className="bg-gradient-to-r from-blue-50 via-cyan-50 to-blue-50 px-6 py-4 border-b-2 border-gray-100">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-4 flex-1">
-            <div className="relative">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <FileText size={24} />
-              </div>
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center border-2 border-blue-100 shadow-sm">
-                <span className="text-xs font-bold text-blue-600">{products.length || 0}</span>
+        <div className="flex items-start gap-4">
+          <div className="relative flex-shrink-0">
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <FileText size={24} />
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center border-2 border-blue-100 shadow-sm">
+              <span className="text-xs font-bold text-blue-600">{products.length || 0}</span>
+            </div>
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-3 mb-2">
+              <h3 className="font-bold text-gray-800 text-lg leading-tight line-clamp-2 flex-1">
+                {clientName || razonSocial || `Cotización #${id}`}
+              </h3>
+              
+              {/* Status Badge - Ahora más compacto */}
+              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border flex-shrink-0 ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}>
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${statusStyle.dot} animate-pulse`}></span>
+                <span className="text-xs font-semibold uppercase whitespace-nowrap">{statusLabel}</span>
               </div>
             </div>
             
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start gap-2 mb-1">
-                <h3 className="font-bold text-gray-800 text-lg leading-tight truncate">
-                  {clientName || razonSocial || `Cotización #${id}`}
-                </h3>
+            {razonSocial && clientName && razonSocial !== clientName && (
+              <p className="text-sm text-gray-600 truncate">{razonSocial}</p>
+            )}
+            
+            {folio && (
+              <div className="flex items-center gap-2 mt-2">
+                <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-mono font-bold">
+                  #{folio}
+                </span>
               </div>
-              
-              {razonSocial && clientName && razonSocial !== clientName && (
-                <p className="text-sm text-gray-600 truncate">{razonSocial}</p>
-              )}
-              
-              {folio && (
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-mono font-bold">
-                    #{folio}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Status Badge */}
-          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}>
-            <span className={`w-2 h-2 rounded-full ${statusStyle.dot} animate-pulse`}></span>
-            <span className="text-xs font-semibold uppercase">{status}</span>
+            )}
           </div>
         </div>
       </div>

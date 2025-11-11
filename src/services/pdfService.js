@@ -44,7 +44,9 @@ export function createQuoteHTML(quoteData = {}, sellerCompany = {}, template = {
       </table>
 
       <div style="margin-top:12px; text-align:right">
-        <strong>Total: ${Number(quoteData.total || 0).toFixed(2)}</strong>
+        <div><strong>Subtotal:</strong> $${Number(quoteData.total || 0).toFixed(2)}</div>
+        <div><strong>IVA (16%):</strong> $${(Number(quoteData.total || 0) * 0.16).toFixed(2)}</div>
+        <div style="margin-top:8px; font-size:16px"><strong>TOTAL:</strong> $${(Number(quoteData.total || 0) * 1.16).toFixed(2)}</div>
       </div>
 
       <footer style="margin-top:24px; font-size:11px; color:#666">
@@ -81,11 +83,11 @@ export function openQuoteInPrintWindow(quoteData = {}, sellerCompany = {}, templ
     
     const items = (quoteData.products || quoteData.cartItems || []).map(it => `
       <tr>
-        <td style="padding:8px;border:1px solid #ddd;background:rgba(255,255,255,0.9)">${it.code || ''}</td>
-        <td style="padding:8px;border:1px solid #ddd;background:rgba(255,255,255,0.9)">${it.name || ''}</td>
-        <td style="padding:8px;border:1px solid #ddd;text-align:right;background:rgba(255,255,255,0.9)">${it.quantity || 0}</td>
-        <td style="padding:8px;border:1px solid #ddd;text-align:right;background:rgba(255,255,255,0.9)">$${Number(it.basePrice || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</td>
-        <td style="padding:8px;border:1px solid #ddd;text-align:right;background:rgba(255,255,255,0.9)">$${(Number(it.quantity || 0) * Number(it.basePrice || 0)).toLocaleString('es-MX', {minimumFractionDigits: 2})}</td>
+        <td style="padding:8px;border:1px solid #ddd;background:rgba(255,255,255,0.9)">${it.code || it.productId || 'S/C'}</td>
+        <td style="padding:8px;border:1px solid #ddd;background:rgba(255,255,255,0.9)">${it.name || it.description || ''}</td>
+        <td style="padding:8px;border:1px solid #ddd;text-align:right;background:rgba(255,255,255,0.9)">${it.quantity || it.qty || 0}</td>
+        <td style="padding:8px;border:1px solid #ddd;text-align:right;background:rgba(255,255,255,0.9)">$${Number(it.basePrice || it.unitPrice || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</td>
+        <td style="padding:8px;border:1px solid #ddd;text-align:right;background:rgba(255,255,255,0.9)">$${(Number(it.quantity || it.qty || 0) * Number(it.basePrice || it.unitPrice || 0)).toLocaleString('es-MX', {minimumFractionDigits: 2})}</td>
       </tr>
     `).join('\n')
 
@@ -227,25 +229,25 @@ export function openQuoteInPrintWindow(quoteData = {}, sellerCompany = {}, templ
           }
           
           .total-section {
-            margin-top: 25px;
+            margin-top: 20px;
             display: flex;
             justify-content: flex-end;
           }
           
           .total-box {
             background: rgba(255, 255, 255, 0.98);
-            padding: 20px 25px;
-            border-radius: 10px;
-            min-width: 320px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 12px 18px;
+            border-radius: 8px;
+            min-width: 280px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
             border: 1px solid rgba(30, 64, 175, 0.1);
           }
           
           .total-row {
             display: flex;
             justify-content: space-between;
-            padding: 10px 0;
-            font-size: 13px;
+            padding: 6px 0;
+            font-size: 12px;
             color: #374151;
           }
           
@@ -254,39 +256,39 @@ export function openQuoteInPrintWindow(quoteData = {}, sellerCompany = {}, templ
           }
           
           .total-row.iva {
-            padding: 10px 0;
+            padding: 6px 0;
             color: #6b7280;
           }
           
           .total-row.final {
-            border-top: 3px solid #1e40af;
-            margin-top: 10px;
-            padding-top: 15px;
-            font-size: 20px;
+            border-top: 2px solid #1e40af;
+            margin-top: 6px;
+            padding-top: 8px;
+            font-size: 16px;
             font-weight: bold;
             color: #1e40af;
           }
           
           footer {
-            margin-top: 30px;
+            margin-top: 20px;
             background: rgba(255, 255, 255, 0.98);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 12px 18px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
             border: 1px solid rgba(30, 64, 175, 0.1);
           }
           
           footer strong {
             color: #1e40af;
             display: block;
-            margin-bottom: 10px;
-            font-size: 13px;
+            margin-bottom: 6px;
+            font-size: 12px;
           }
           
           footer div {
             color: #374151;
-            font-size: 11px;
-            line-height: 1.8;
+            font-size: 10px;
+            line-height: 1.6;
           }
           
           @media print {

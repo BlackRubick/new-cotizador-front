@@ -45,13 +45,22 @@ const InputField = ({ label, value, onChange, placeholder, icon: Icon, error, ty
   </div>
 )
 
-export default function EncargadosManager({ value = [], onChange }) {
+function EncargadosManager({ value = [], onChange }) {
   const [lista, setLista] = useState(value || [])
   const [nombre, setNombre] = useState('')
   const [cargo, setCargo] = useState('')
   const [telefono, setTelefono] = useState('')
   const [email, setEmail] = useState('')
   const [errors, setErrors] = useState({})
+
+  // Sincronizar con el prop value cuando cambie (pero solo al inicio)
+  const initializedRef = React.useRef(false)
+  React.useEffect(() => {
+    if (!initializedRef.current) {
+      setLista(value || [])
+      initializedRef.current = true
+    }
+  }, [value])
 
   function validateFields() {
     const newErrors = {}
@@ -164,6 +173,7 @@ export default function EncargadosManager({ value = [], onChange }) {
         </div>
 
         <button 
+          type="button"
           onClick={addEncargado}
           className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-medium text-sm"
         >
@@ -260,3 +270,6 @@ export default function EncargadosManager({ value = [], onChange }) {
     </div>
   )
 }
+
+// Memo para evitar re-renders innecesarios
+export default React.memo(EncargadosManager)

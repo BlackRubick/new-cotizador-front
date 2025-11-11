@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 // Product images hidden in Quotes view per user request
 import { confirmDialog, alertError } from '../utils/swal'
+import Swal from 'sweetalert2'
 
 export default function QuoteViewPage() {
   const { id } = useParams()
@@ -84,6 +85,494 @@ export default function QuoteViewPage() {
       console.error('Error updating status', e)
       await alertError('Error actualizando el estado')
     }
+  }
+
+  async function handleSendEmail() {
+    if (!quote) return
+    
+    // Validar que el cliente tenga email
+    if (!quote.email) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Email no disponible',
+        text: 'Este cliente no tiene un correo electrónico registrado.',
+        confirmButtonColor: '#0284c7'
+      })
+      return
+    }
+    
+    // Confirmar envío
+    const confirmed = await confirmDialog(
+      `¿Enviar cotización a ${quote.email}?`
+    )
+    
+    if (!confirmed) return
+    
+    try {
+      // Mostrar loading - Generando PDF
+      Swal.fire({
+        title: 'Generando PDF...',
+        html: `Preparando cotización con plantilla de ${quote.sellerCompany || 'empresa'}`,
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading()
+        }
+      })
+      
+      // Generar PDF con las plantillas (igual que "Visualizar PDF")
+      const pdfBlob = await generatePDFWithTemplate()
+      
+      if (!pdfBlob) {
+        throw new Error('No se pudo generar el PDF')
+      }
+      
+      // Actualizar loading - Enviando
+      Swal.update({
+        title: 'Enviando...',
+        html: `Enviando cotización a <strong>${quote.email}</strong>`
+      })
+      
+      // Preparar mensaje automático
+      const clientName = quote.clientName || 'Estimado cliente'
+      const message = `Estimado/a ${clientName},\n\nAdjunto encontrará la cotización ${quote.folio || quote.id}.\n\nGracias por su confianza.\n\nSaludos cordiales,\n${quote.seller || 'Equipo de Ventas'}`
+      
+      // Crear FormData con el PDF generado
+      const formData = new FormData()
+      formData.append('to', quote.email)
+      formData.append('subject', `Cotización ${quote.folio || quote.id} - ${quote.sellerCompany || 'Cotización'}`)
+      formData.append('message', message)
+      formData.append('pdf', pdfBlob, `cotizacion-${quote.folio || quote.id}.pdf`)
+      
+      // Enviar email con PDF adjunto
+      const result = await quoteService.sendQuoteWithPDF(quote.id, formData)
+      
+      if (result.success) {
+        await Swal.fire({
+          icon: 'success',
+          title: '¡Correo Enviado!',
+          html: `La cotización fue enviada exitosamente a:<br><strong>${quote.email}</strong>`,
+          confirmButtonColor: '#0284c7'
+        })
+      } else {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error al Enviar',
+          text: result.error || 'No se pudo enviar el correo. Por favor verifica la configuración SMTP.',
+          confirmButtonColor: '#0284c7'
+        })
+      }
+    } catch (error) {
+      console.error('Error sending email:', error)
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'Ocurrió un error al enviar el correo. Por favor verifica tu conexión.',
+        confirmButtonColor: '#0284c7'
+      })
+    }
+  }
+
+  async function handleSendWhatsApp() {
+    if (!quote) return
+    
+    // Validar que el cliente tenga teléfono
+    if (!quote.phone) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Teléfono no disponible',
+        text: 'Este cliente no tiene un número de teléfono registrado.',
+        confirmButtonColor: '#0284c7'
+      })
+      return
+    }
+    
+    try {
+      // Mostrar loading - Generando PDF
+      Swal.fire({
+        title: 'Generando PDF...',
+        html: `Preparando cotización para WhatsApp`,
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading()
+        }
+      })
+      
+      // Generar PDF con las plantillas
+      const pdfBlob = await generatePDFWithTemplate()
+      
+      if (!pdfBlob) {
+        throw new Error('No se pudo generar el PDF')
+      }
+      
+      // Descargar el PDF automáticamente
+      const url = window.URL.createObjectURL(pdfBlob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `cotizacion-${quote.folio || quote.id}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+      
+      // Cerrar el loading
+      Swal.close()
+      
+      // Preparar mensaje para WhatsApp
+      const clientName = quote.clientName || 'Estimado cliente'
+      const message = `Hola ${clientName}, adjunto encontrarás la cotización ${quote.folio || quote.id}. Gracias por tu confianza. Saludos, ${quote.seller || 'Equipo de Ventas'}`
+      
+      // Limpiar el número de teléfono (quitar espacios, guiones, etc.)
+      const cleanPhone = quote.phone.replace(/[^\d]/g, '')
+      
+      // Agregar código de país si no lo tiene (asumiendo México +52)
+      let phoneNumber = cleanPhone
+      if (!cleanPhone.startsWith('52') && cleanPhone.length === 10) {
+        phoneNumber = '52' + cleanPhone
+      }
+      
+      // Codificar el mensaje para URL
+      const encodedMessage = encodeURIComponent(message)
+      
+      // Abrir WhatsApp Web con el mensaje
+      const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`
+      
+      // Mostrar instrucciones
+      await Swal.fire({
+        icon: 'success',
+        title: 'PDF Descargado',
+        html: `
+          <div style="text-align: left;">
+            <p style="margin-bottom: 10px;">✅ El PDF se ha descargado correctamente.</p>
+            <p style="margin-bottom: 10px;">📱 Se abrirá WhatsApp Web en unos segundos.</p>
+            <p style="margin-bottom: 10px;"><strong>Instrucciones:</strong></p>
+            <ol style="margin-left: 20px;">
+              <li>WhatsApp se abrirá con el mensaje pre-escrito</li>
+              <li>Haz clic en el ícono de clip 📎 para adjuntar</li>
+              <li>Selecciona el PDF descargado</li>
+              <li>Envía el mensaje</li>
+            </ol>
+          </div>
+        `,
+        confirmButtonText: 'Abrir WhatsApp',
+        confirmButtonColor: '#25D366',
+        showCancelButton: true,
+        cancelButtonText: 'Cerrar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Abrir WhatsApp en una nueva pestaña
+          window.open(whatsappUrl, '_blank')
+        }
+      })
+      
+    } catch (error) {
+      console.error('Error preparing WhatsApp:', error)
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'Ocurrió un error al preparar el envío por WhatsApp.',
+        confirmButtonColor: '#0284c7'
+      })
+    }
+  }
+  
+  // Función auxiliar para generar PDF con plantilla usando ventana temporal
+  async function generatePDFWithTemplate() {
+    return new Promise((resolve, reject) => {
+      try {
+        // Obtener datos de la empresa y plantilla
+        const companyData = {
+          'CONDUIT LIFE': {
+            template: 'CONDUIT-LIFE.jpeg',
+            name: 'CONDUIT LIFE',
+            fullName: 'CONDUIT LIFE',
+            address: 'Calle Principal #123, Col. Centro, Ciudad, Estado, C.P. 12345',
+            rfc: 'CLF123456ABC'
+          },
+          'BIOSYSTEMS HLS': {
+            template: 'Biosystems-HLS.jpeg',
+            name: 'BIOSYSTEMS HLS',
+            fullName: 'BIOSYSTEMS HLS',
+            address: 'Av. Tecnológico #456, Col. Industrial, Ciudad, Estado, C.P. 54321',
+            rfc: 'BHS789012DEF'
+          },
+          'INGENIERÍA CLÍNICA Y DISEÑO': {
+            template: 'INGENIERIA-CLINICA-DISEÑO.jpeg',
+            name: 'INGENIERÍA CLÍNICA Y DISEÑO',
+            fullName: 'INGENIERÍA CLÍNICA Y DISEÑO S.A. DE C.V.',
+            address: 'Boulevard Innovación #789, Col. Empresarial, Ciudad, Estado, C.P. 67890',
+            rfc: 'ICD345678GHI'
+          },
+          'ESCALA BIOMÉDICA': {
+            template: 'ESCALA-BIOMEDICA.jpeg',
+            name: 'ESCALA BIOMÉDICA',
+            fullName: 'ESCALA BIOMÉDICA',
+            address: 'Calle Salud #321, Col. Médica, Ciudad, Estado, C.P. 09876',
+            rfc: 'EBM901234JKL'
+          }
+        }
+        
+        const companyName = (quote.sellerCompany || '').toUpperCase()
+        const company = companyData[companyName]
+        
+        const sellerCompany = company ? {
+          name: company.name,
+          fullName: company.fullName,
+          address: company.address,
+          rfc: company.rfc
+        } : {
+          name: quote.sellerCompany || 'Empresa Vendedora',
+          fullName: quote.sellerCompany || 'Empresa Vendedora',
+          address: '',
+          rfc: ''
+        }
+        
+        const templatePath = company ? `/plantillas/${company.template}` : ''
+        
+        // Generar HTML con plantilla (igual que Visualizar PDF)
+        const htmlContent = generateQuotePDFHTML(quote, sellerCompany, templatePath)
+        
+        // Abrir ventana temporal oculta
+        const win = window.open('', '_blank', 'width=800,height=900')
+        
+        if (!win) {
+          reject(new Error('No se pudo abrir ventana temporal. Verifica que los pop-ups estén permitidos.'))
+          return
+        }
+        
+        win.document.open()
+        win.document.write(htmlContent)
+        win.document.close()
+        
+        // Esperar a que cargue completamente
+        win.addEventListener('load', async () => {
+          try {
+            // Esperar un poco más para que las imágenes de fondo carguen
+            await new Promise(resolve => setTimeout(resolve, 1500))
+            
+            // Capturar con html2canvas desde la ventana
+            const canvas = await window.html2canvas(win.document.body, {
+              scale: 2,
+              useCORS: true,
+              allowTaint: false,
+              backgroundColor: '#ffffff',
+              logging: false,
+              width: win.document.body.scrollWidth,
+              height: win.document.body.scrollHeight
+            })
+            
+            // Crear PDF con jsPDF
+            const imgData = canvas.toDataURL('image/png')
+            const pdf = new window.jspdf.jsPDF({
+              orientation: 'portrait',
+              unit: 'mm',
+              format: 'a4'
+            })
+            
+            const imgWidth = 210 // A4 width in mm
+            const imgHeight = (canvas.height * imgWidth) / canvas.width
+            
+            pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight)
+            
+            // Cerrar ventana temporal
+            win.close()
+            
+            // Retornar como Blob
+            resolve(pdf.output('blob'))
+            
+          } catch (error) {
+            win.close()
+            reject(error)
+          }
+        })
+        
+        // Timeout de seguridad
+        setTimeout(() => {
+          if (win && !win.closed) {
+            win.close()
+          }
+          reject(new Error('Timeout al generar PDF'))
+        }, 10000)
+        
+      } catch (error) {
+        console.error('Error generating PDF:', error)
+        reject(error)
+      }
+    })
+  }
+  
+  // Función para generar el HTML del PDF
+  function generateQuotePDFHTML(quoteData, sellerCompany, templatePath) {
+    const subtotal = Number(quoteData.total || 0)
+    const iva = subtotal * 0.16
+    const totalConIva = subtotal + iva
+    
+    const items = (quoteData.products || quoteData.cartItems || []).map(it => `
+      <tr>
+        <td style="padding:8px;border:1px solid #ddd;background:rgba(255,255,255,0.9)">${it.code || it.productId || 'S/C'}</td>
+        <td style="padding:8px;border:1px solid #ddd;background:rgba(255,255,255,0.9)">${it.name || it.description || ''}</td>
+        <td style="padding:8px;border:1px solid #ddd;text-align:right;background:rgba(255,255,255,0.9)">${it.quantity || it.qty || 0}</td>
+        <td style="padding:8px;border:1px solid #ddd;text-align:right;background:rgba(255,255,255,0.9)">$${Number(it.basePrice || it.unitPrice || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</td>
+        <td style="padding:8px;border:1px solid #ddd;text-align:right;background:rgba(255,255,255,0.9)">$${(Number(it.quantity || it.qty || 0) * Number(it.basePrice || it.unitPrice || 0)).toLocaleString('es-MX', {minimumFractionDigits: 2})}</td>
+      </tr>
+    `).join('\n')
+
+    return `
+    <!doctype html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: Arial, Helvetica, sans-serif; color: #111; position: relative; }
+          .page {
+            position: relative;
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: white;
+            overflow: hidden;
+            ${templatePath ? `
+              background-image: url('${templatePath}');
+              background-size: 100% 100%;
+              background-position: left top;
+              background-repeat: no-repeat;
+            ` : ''}
+          }
+          .content {
+            position: relative;
+            z-index: 10;
+            padding: 50mm 15mm 15mm 15mm;
+          }
+          .header {
+            background: rgba(255, 255, 255, 0.98);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+          }
+          .company-info h2 {
+            color: #1e40af;
+            margin-bottom: 10px;
+            font-size: 18px;
+          }
+          .quote-info {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 18px 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 10px;
+          }
+          th {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            padding: 14px 12px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 12px;
+          }
+          td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 11px;
+          }
+          .total-section {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+          }
+          .total-box {
+            background: rgba(255, 255, 255, 0.98);
+            padding: 12px 18px;
+            border-radius: 8px;
+            min-width: 280px;
+          }
+          .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 12px;
+          }
+          .total-row.final {
+            border-top: 2px solid #1e40af;
+            margin-top: 6px;
+            padding-top: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #1e40af;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="page">
+          <div class="content">
+            <div class="header">
+              <div class="company-info">
+                <h2>${sellerCompany.fullName || sellerCompany.name || 'Empresa Vendedora'}</h2>
+                <div>${sellerCompany.address || ''}</div>
+                <div>RFC: ${sellerCompany.rfc || ''}</div>
+              </div>
+            </div>
+
+            <div class="quote-info">
+              <div>
+                <div><strong>Folio:</strong> ${quoteData.folio || ''}</div>
+                <div><strong>Vendedor:</strong> ${quoteData.seller || ''}</div>
+              </div>
+              <div style="text-align:right">
+                <div><strong>Fecha:</strong> ${new Date(quoteData.createdAt || Date.now()).toLocaleDateString('es-MX')}</div>
+                <div><strong>Cliente:</strong> ${quoteData.clientName || ''}</div>
+              </div>
+            </div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Descripción</th>
+                  <th style="text-align:right">Cantidad</th>
+                  <th style="text-align:right">Precio Unit.</th>
+                  <th style="text-align:right">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${items}
+              </tbody>
+            </table>
+
+            <div class="total-section">
+              <div class="total-box">
+                <div class="total-row">
+                  <span>Subtotal:</span>
+                  <span>$${subtotal.toLocaleString('es-MX', {minimumFractionDigits: 2})}</span>
+                </div>
+                <div class="total-row">
+                  <span>IVA (16%):</span>
+                  <span>$${iva.toLocaleString('es-MX', {minimumFractionDigits: 2})}</span>
+                </div>
+                <div class="total-row final">
+                  <span>TOTAL:</span>
+                  <span>$${totalConIva.toLocaleString('es-MX', {minimumFractionDigits: 2})}</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:20px;background:rgba(255,255,255,0.98);padding:12px 18px;border-radius:8px;">
+              <strong style="color:#1e40af;">Observaciones:</strong>
+              <div>${quoteData.terms || 'Ninguna'}</div>
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
+    `
   }
 
   function handleViewPDF() {
@@ -474,6 +963,7 @@ export default function QuoteViewPage() {
 
                   {/* Enviar por Correo */}
                   <button 
+                    onClick={handleSendEmail}
                     className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-xl font-medium hover:shadow-lg transition-all transform hover:scale-105"
                   >
                     <Mail size={18} />
@@ -482,6 +972,7 @@ export default function QuoteViewPage() {
 
                   {/* Enviar por WhatsApp */}
                   <button 
+                    onClick={handleSendWhatsApp}
                     className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-medium hover:shadow-lg transition-all transform hover:scale-105"
                   >
                     <MessageCircle size={18} />

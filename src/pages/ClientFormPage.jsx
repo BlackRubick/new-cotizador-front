@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import MainTemplate from '../templates/MainTemplate'
 import ClientForm from '../components/clients/ClientForm'
@@ -8,18 +8,31 @@ import { alertError } from '../utils/swal'
 export default function ClientFormPage() {
   const navigate = useNavigate()
   const { id } = useParams()
+  const [initial, setInitial] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const loadedRef = useRef(false)
 
-  console.log('[ClientFormPage] render id=', id)
-
-  const initial = useMemo(() => {
-    if (id) {
-      const clients = clientService.listClients()
-      const found = clients.find(c => c.id === id)
-      console.log('[ClientFormPage] computed initial (found?)', !!found)
-      return found || { encargados: [] }
+  useEffect(() => {
+    // Solo cargar una vez cuando cambie el ID
+    if (loadedRef.current) return
+    
+    async function loadClient() {
+      setIsLoading(true)
+      if (id) {
+        const client = await clientService.getClientById(id)
+        setInitial(client || { encargados: [] })
+      } else {
+        setInitial({ encargados: [] })
+      }
+      setIsLoading(false)
+      loadedRef.current = true
     }
-    console.log('[ClientFormPage] computed initial new')
-    return { encargados: [] }
+    loadClient()
+    
+    // Reset cuando cambie el ID
+    return () => {
+      loadedRef.current = false
+    }
   }, [id])
 
   async function handleSave(data) {
@@ -31,6 +44,16 @@ export default function ClientFormPage() {
       if (!res.success) await alertError('Error creando: ' + res.error)
     }
     navigate('/clients')
+  }
+
+  if (isLoading || !initial) {
+    return (
+      <MainTemplate>
+        <div className="p-6 flex items-center justify-center">
+          <div className="animate-pulse text-gray-500">Cargando...</div>
+        </div>
+      </MainTemplate>
+    )
   }
 
   return (

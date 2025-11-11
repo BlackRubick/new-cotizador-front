@@ -26,6 +26,8 @@ function saveClientsToCache(list) {
  */
 function mapApiClientToFrontend(apiClient) {
   const metadata = apiClient.metadata || {}
+  // Extraer encargados desde metadata
+  const encargados = metadata.encargados || []
   
   // Si el cliente tiene equipos, crear un cliente por cada equipo (comportamiento actual)
   if (apiClient.equipos && apiClient.equipos.length > 0) {
@@ -50,7 +52,7 @@ function mapApiClientToFrontend(apiClient) {
       ultimoMantenimiento: equipo.ultimoMantenimiento || '',
       estatusAbril2025: metadata.estatusAbril2025 || '',
       estatusInicio26: metadata.estatusInicio26 || '',
-      encargados: []
+      encargados: encargados
     }))
   }
   
@@ -75,7 +77,7 @@ function mapApiClientToFrontend(apiClient) {
     ultimoMantenimiento: '',
     estatusAbril2025: metadata.estatusAbril2025 || '',
     estatusInicio26: metadata.estatusInicio26 || '',
-    encargados: []
+    encargados: encargados
   }]
 }
 
@@ -183,10 +185,35 @@ export async function listClients() {
   }
 }
 
+/**
+ * Obtener un cliente por ID
+ */
+export async function getClientById(id) {
+  try {
+    // Extraer el ID real de la API si viene en formato compuesto
+    const apiClientId = id.toString().includes('-') ? id.toString().split('-')[0] : id
+    
+    const response = await get(`/clients/${apiClientId}`)
+    const clients = mapApiClientToFrontend(response.data)
+    
+    // Si viene un ID compuesto (con equipo), buscar ese específico
+    if (id.toString().includes('-')) {
+      return clients.find(c => c.id === id) || clients[0]
+    }
+    
+    // Si no, devolver el primero
+    return clients[0]
+  } catch (error) {
+    console.error('Error al obtener cliente:', error)
+    return null
+  }
+}
+
 export default {
   createClient,
   createClientsBatch,
   updateClient,
   deleteClient,
-  listClients
+  listClients,
+  getClientById
 }

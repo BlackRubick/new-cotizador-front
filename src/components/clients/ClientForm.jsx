@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useLayoutEffect } from 'react'
+import React, { useEffect, useState, useRef, useLayoutEffect, useCallback } from 'react'
 import EncargadosManager from './EncargadosManager'
 import { 
   Building2, 
@@ -15,56 +15,20 @@ import {
 } from 'lucide-react'
 
 export default function ClientForm({ initial = {}, onSave, onCancel }) {
-  const [form, setForm] = useState({ ...initial })
+  // Inicializar el formulario UNA SOLA VEZ con los datos iniciales
+  const [form, setForm] = useState(() => {
+    // Asegurar que encargados sea un array
+    const initialData = { ...initial }
+    if (!initialData.encargados) {
+      initialData.encargados = []
+    }
+    return initialData
+  })
   const [errors, setErrors] = useState({})
   const [touched, setTouched] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Debug instrumentation: mount/unmount and form change traces
-  useEffect(() => {
-    console.log('[ClientForm] mounted')
-    return () => {
-      console.log('[ClientForm] unmounted')
-      console.trace('[ClientForm] unmounted trace')
-    }
-  }, [])
-
-  useEffect(() => {
-    // Log minimal form snapshot to help diagnose focus-loss issues
-    console.log('[ClientForm] form changed:', Object.keys(form).length ? { empresaResponsable: form.empresaResponsable || '', codigoPostal: form.codigoPostal || '' } : 'empty')
-  }, [form])
-
-  // Preserve and restore focus across re-renders if it gets lost unexpectedly.
   const focusedRef = useRef(null)
-  useLayoutEffect(() => {
-    if (!focusedRef.current) return
-    const id = focusedRef.current
-    const el = document.getElementById(id)
-    const active = document.activeElement
-    // Only restore focus when there is no meaningful active element (focus was lost to body/document)
-    const activeIsBodyOrNull = !active || active === document.body || active === document.documentElement
-    if (el && activeIsBodyOrNull) {
-      // restore focus and place caret at end
-      el.focus()
-      try {
-        const len = (el.value || '').length
-        el.setSelectionRange(len, len)
-      } catch (e) {
-        // some inputs may not support setSelectionRange
-      }
-      console.log('[ClientForm] restored focus to', id)
-    }
-  }, [form])
-  
-
-  // Initialize form only if the form is currently empty to avoid
-  // overwriting user input when parent passes a new empty object each render.
-  useEffect(() => {
-    if (!initial) return
-    const isFormEmpty = Object.keys(form).length === 0 || Object.values(form).every(v => v === '' || (Array.isArray(v) && v.length === 0) || v == null)
-    if (isFormEmpty) setForm({ ...initial })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initial])
 
   function handleChange(key, value) {
     setForm(prev => ({ ...prev, [key]: value }))
@@ -80,13 +44,9 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
 
   function handleBlur(key) {
     setTouched(prev => ({ ...prev, [key]: true }))
-    // debug
-    console.log('[ClientForm] blur', key)
   }
 
   function handleFocus(key) {
-    // debug
-    console.log('[ClientForm] focus', key)
     focusedRef.current = key
   }
 
@@ -104,6 +64,9 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
   async function submit(e) {
     e && e.preventDefault()
     setIsSubmitting(true)
+    
+    console.log('[ClientForm] submit - form data:', form)
+    console.log('[ClientForm] submit - encargados:', form.encargados)
     
     // Marcar todos los campos como tocados para mostrar errores
     const allFields = ['empresaResponsable','dependencia','hospital','estado','ciudad','codigoPostal','direccion','equipo','marca','modelo','numeroSerie']
@@ -367,7 +330,21 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
         <div className={`p-4 rounded-xl transition-all ${errors.encargados ? 'bg-red-50 border-2 border-red-300' : 'bg-gray-50 border-2 border-gray-200'}`}>
           <EncargadosManager 
             value={form.encargados||[]} 
-            onChange={(list)=>handleChange('encargados', list)} 
+            onChange={(list) => {
+              console.log('[ClientForm] onChange encargados:', list)
+              setForm(prev => {
+                const updated = { ...prev, encargados: list }
+                console.log('[ClientForm] form updated:', updated)
+                return updated
+              })
+              if (errors.encargados) {
+                setErrors(prev => {
+                  const newErrors = { ...prev }
+                  delete newErrors.encargados
+                  return newErrors
+                })
+              }
+            }} 
           />
         </div>
         

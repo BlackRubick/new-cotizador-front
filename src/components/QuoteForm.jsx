@@ -197,7 +197,12 @@ export default function QuoteForm({ onCreated, initial = null, onUpdated }) {
       setSelectedEncargadoId(null)
       return
     }
-    const c = clients.find(x => x.id === selectedClientId) || null
+    console.log('[QuoteForm] Buscando cliente con ID:', selectedClientId, 'tipo:', typeof selectedClientId)
+    console.log('[QuoteForm] Clientes disponibles:', clients.map(c => ({ id: c.id, tipo: typeof c.id })))
+    
+    // Buscar por ID exacto o por apiClientId
+    const c = clients.find(x => x.id === selectedClientId || x.apiClientId === selectedClientId || String(x.id).startsWith(String(selectedClientId))) || null
+    console.log('[QuoteForm] Cliente encontrado:', c)
     setSelectedClientPreview(c)
     setClientConfirmed(false)
     // preselect first encargado if available, but preserve any existing selection restored from draft
@@ -354,6 +359,12 @@ export default function QuoteForm({ onCreated, initial = null, onUpdated }) {
   useEffect(() => {
     if (!initial) return
     try {
+      console.log('=== QuoteForm useEffect - Loading initial data ===')
+      console.log('initial completo:', initial)
+      console.log('initial.clientId:', initial.clientId)
+      console.log('initial.clientContact:', initial.clientContact)
+      console.log('initial.clientAddress:', initial.clientAddress)
+      
       setSellerCompany(initial.sellerCompany || '')
       setSellerCompanyId(initial.sellerCompanyId || '')
       setClientName(initial.clientName || '')
@@ -363,11 +374,33 @@ export default function QuoteForm({ onCreated, initial = null, onUpdated }) {
       setClientAddress(initial.clientAddress || '')
       setProducts(initial.products || [])
       setTerms(initial.terms || '')
-      setSelectedClientId(initial.clientId || null)
+      
+      // Buscar el cliente correcto en la lista usando apiClientId
+      if (initial.clientId && clients.length > 0) {
+        const matchingClient = clients.find(c => 
+          c.apiClientId === initial.clientId || 
+          c.id === initial.clientId || 
+          String(c.id).startsWith(String(initial.clientId))
+        )
+        console.log('Cliente encontrado para select:', matchingClient)
+        if (matchingClient) {
+          setSelectedClientId(matchingClient.id) // Usar el ID compuesto del cliente
+          setClientConfirmed(true)
+        } else {
+          setSelectedClientId(initial.clientId)
+        }
+      } else {
+        setSelectedClientId(initial.clientId || null)
+      }
+      
+      console.log('=== Estado después de cargar ===')
+      console.log('selectedClientId final:', initial.clientId)
+      console.log('clientContact:', initial.clientContact)
+      console.log('clientAddress:', initial.clientAddress)
     } catch (e) {
       console.warn('Failed to load initial quote into form', e)
     }
-  }, [initial])
+  }, [initial, clients])
 
   function handleConfirmClient() {
     if (!selectedClientPreview) return

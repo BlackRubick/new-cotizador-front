@@ -25,12 +25,23 @@ export default function ProductManager() {
   }, [])
 
   useEffect(() => {
-    const list = productService.listProducts()
-    setProducts(list)
-
-    // try to auto-discover images for products that don't have `imagen` set
     let mounted = true
-    async function discoverImages() {
+    
+    async function loadProducts() {
+      try {
+        const list = await productService.listProducts()
+        if (!mounted) return
+        setProducts(list)
+
+        // try to auto-discover images for products that don't have `imagen` set
+        await discoverImages(list)
+      } catch (error) {
+        console.error('Error cargando productos:', error)
+        setProducts([])
+      }
+    }
+
+    async function discoverImages(list) {
       try {
         const candidatesExt = ['png','jpg','jpeg','webp','avif']
         for (const p of list) {
@@ -79,12 +90,16 @@ export default function ProductManager() {
             }
           }
         }
-        if (mounted) setProducts(productService.listProducts())
+        if (mounted) {
+          const updatedList = await productService.listProducts()
+          setProducts(updatedList)
+        }
       } catch (e) {
-        // ignore
+        console.error('Error discovering images:', e)
       }
     }
-    discoverImages()
+
+    loadProducts()
     return () => { mounted = false }
   }, [])
 
@@ -190,17 +205,28 @@ export default function ProductManager() {
         return
       }
 
-      let success = 0
-      let fails = 0
-      for (const p of mapped) {
-        const res = await productService.createProduct(p)
-        if (res.success) success++
-        else fails++
-        await new Promise(r=>setTimeout(r,100))
+      // Usar el endpoint batch para importar todos los productos de una vez
+      const result = await productService.createProductsBatch(mapped)
+      
+      if (result.success) {
+        const { success, failed, errors } = result.data
+        
+        let message = `Importación finalizada.\n✅ Éxitos: ${success}`
+        if (failed > 0) {
+          message += `\n❌ Errores: ${failed}`
+          if (errors.length > 0) {
+            message += `\n\nPrimeros errores:\n${errors.slice(0, 5).map(e => `- ${e.sku}: ${e.error}`).join('\n')}`
+          }
+        }
+        
+        await alertSuccess(message)
+        
+        // Recargar productos
+        const updatedProducts = await productService.listProducts()
+        setProducts(updatedProducts)
+      } else {
+        await alertInfo('Error en la importación: ' + result.error)
       }
-
-      await alertSuccess(`Importación finalizada. Éxitos: ${success}  Errores: ${fails}`)
-      setProducts(productService.listProducts())
     } catch (error) {
       await alertInfo('Error al procesar el archivo: ' + error.message)
     } finally {
@@ -210,11 +236,18 @@ export default function ProductManager() {
 
   async function handleDelete(id) {
     if (!(await confirmDialog('Eliminar producto?'))) return
-    productService.deleteProduct(id)
-    setProducts(productService.listProducts())
+    try {
+      await productService.deleteProduct(id)
+      const updatedProducts = await productService.listProducts()
+      setProducts(updatedProducts)
+      toastSuccess('Producto eliminado')
+    } catch (error) {
+      console.error('Error eliminando producto:', error)
+      toastError('Error al eliminar el producto')
+    }
   }
 
-  const filtered = products.filter(p => {
+  const filtered = (Array.isArray(products) ? products : []).filter(p => {
     if (!searchQuery) return true
     return (p.descripcion || p.modelo || p.marca || p.proveedor || p.categoria || '').toString().toLowerCase().includes(searchQuery.toLowerCase())
   })
@@ -274,7 +307,7 @@ export default function ProductManager() {
       {!selectedCategory ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
           {categories.map(cat => {
-            const count = products.filter(p => {
+            const count = (Array.isArray(products) ? products : []).filter(p => {
               const norm = p.normalizedCategory || normalizeCategory(p.categoria || (p.raw && p.raw.CATEGORIA) || '')
               return cat.name === 'Todos' ? true : norm === cat.name
             }).length

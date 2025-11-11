@@ -36,7 +36,16 @@ export default function ClientManager() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    setClients(clientService.listClients())
+    async function loadClients() {
+      try {
+        const data = await clientService.listClients()
+        setClients(data)
+      } catch (error) {
+        console.error('Error cargando clientes:', error)
+        setClients([])
+      }
+    }
+    loadClients()
   }, [])
 
   function handleEdit(client) {
@@ -45,8 +54,14 @@ export default function ClientManager() {
 
   async function handleDelete(id) {
     if (!(await confirmDialog('¿Está seguro de eliminar este cliente?'))) return
-    await clientService.deleteClient(id)
-    setClients(clientService.listClients())
+    try {
+      await clientService.deleteClient(id)
+      const updatedClients = await clientService.listClients()
+      setClients(updatedClients)
+    } catch (error) {
+      console.error('Error eliminando cliente:', error)
+      await alertInfo('Error al eliminar el cliente')
+    }
   }
 
   async function handleImportExcel(file) {
@@ -90,17 +105,28 @@ export default function ClientManager() {
         return
       }
 
-      let success = 0
-      let fails = 0
-      for (const c of mapped) {
-        const res = await clientService.createClient(c)
-        if (res.success) success++
-        else fails++
-        await new Promise(r=>setTimeout(r,500))
+      // Usar el endpoint batch para importar todos los clientes de una vez
+      const result = await clientService.createClientsBatch(mapped)
+      
+      if (result.success) {
+        const { success, failed, errors } = result.data
+        
+        let message = `Importación finalizada.\n✅ Éxitos: ${success}`
+        if (failed > 0) {
+          message += `\n❌ Errores: ${failed}`
+          if (errors.length > 0) {
+            message += `\n\nPrimeros errores:\n${errors.slice(0, 5).map(e => `- ${e.client}: ${e.error}`).join('\n')}`
+          }
+        }
+        
+        await alertSuccess(message)
+        
+        // Recargar clientes
+        const updatedClients = await clientService.listClients()
+        setClients(updatedClients)
+      } else {
+        await alertInfo('Error en la importación: ' + result.error)
       }
-
-      await alertSuccess(`Importación finalizada.\nÉxitos: ${success}\nErrores: ${fails}`)
-      setClients(clientService.listClients())
     } catch (error) {
       await alertInfo('Error al procesar el archivo: ' + error.message)
     } finally {
@@ -229,7 +255,7 @@ export default function ClientManager() {
     }
     const res = await clientService.updateClient(original.id, payload)
     if (res && res.success) {
-      const nextClients = clientService.listClients()
+      const nextClients = await clientService.listClients()
       setClients(nextClients)
       const newGroups = buildGroups(nextClients.filter(c => {
         const matchesSearch = !searchQuery || 

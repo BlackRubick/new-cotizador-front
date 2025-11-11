@@ -1,6 +1,9 @@
+import { get, post, put, del } from '../utils/api'
+
 const STORAGE_KEY = 'app_clients'
 
-function loadClients() {
+// Mantener funciones de localStorage como fallback/caché local
+function loadClientsFromCache() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     return raw ? JSON.parse(raw) : []
@@ -9,118 +12,181 @@ function loadClients() {
   }
 }
 
-function saveClients(clients) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(clients))
-}
-
-function mapFrontendToBackend(data) {
-  // minimal mapping
-  const mapped = {
-    id: data.id || `C-${Date.now()}`,
-    createdAt: data.createdAt || new Date().toISOString(),
-    name: data.empresaResponsable || data.name || '',
-    contact: data.contact || '',
-    email: data.email || '',
-    phone: data.phone || '',
-    street: data.direccion || '',
-    city: data.ciudad || '',
-    state: data.estado || '',
-    zipCode: data.codigoPostal || '',
-    clientType: 'hospital',
-    notes: {
-      empresaResponsable: data.empresaResponsable,
-      dependencia: data.dependencia,
-      hospital: data.hospital,
-      contrato: data.contrato,
-      equipo: data.equipo,
-      marca: data.marca,
-      modelo: data.modelo,
-      numeroSerie: data.numeroSerie,
-      fechaInstalacion: data.fechaInstalacion,
-      ultimoMantenimiento: data.ultimoMantenimiento,
-      estatusAbril2025: data.estatusAbril2025,
-      estatusInicio26: data.estatusInicio26,
-      encargados: (data.encargados || []).filter(e => e.nombre).map(e => ({ ...e, fechaRegistro: new Date().toISOString() }))
-    }
-  }
-
-  return mapped
-}
-
-function mapBackendToFrontend(b) {
-  if (!b) return null
-  const notes = b.notes || {}
-  return {
-    id: b.id,
-    fechaCreacion: b.createdAt,
-    empresaResponsable: notes.empresaResponsable || b.name,
-    dependencia: notes.dependencia || '',
-    hospital: notes.hospital || '',
-    contrato: notes.contrato || '',
-    estado: b.state || notes.estado || '',
-    ciudad: b.city || notes.ciudad || '',
-    codigoPostal: b.zipCode || notes.codigoPostal || '',
-    direccion: b.street || notes.direccion || '',
-    equipo: notes.equipo || '',
-    marca: notes.marca || '',
-    modelo: notes.modelo || '',
-    numeroSerie: notes.numeroSerie || '',
-    fechaInstalacion: notes.fechaInstalacion || '',
-    ultimoMantenimiento: notes.ultimoMantenimiento || '',
-    estatusAbril2025: notes.estatusAbril2025 || '',
-    estatusInicio26: notes.estatusInicio26 || '',
-    encargados: (notes.encargados || []).map(e => ({ ...e }))
+function saveClientsToCache(list) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list))
+  } catch (e) {
+    console.error('Error saving to cache:', e)
   }
 }
 
+/**
+ * Mapea un cliente de la API al formato esperado por el frontend
+ * La API ahora devuelve: { id, name, hospital, empresaResponsable, equipos: [...] }
+ */
+function mapApiClientToFrontend(apiClient) {
+  const metadata = apiClient.metadata || {}
+  
+  // Si el cliente tiene equipos, crear un cliente por cada equipo (comportamiento actual)
+  if (apiClient.equipos && apiClient.equipos.length > 0) {
+    return apiClient.equipos.map(equipo => ({
+      id: `${apiClient.id}-${equipo.id}`,
+      apiClientId: apiClient.id,
+      apiEquipmentId: equipo.id,
+      fechaCreacion: apiClient.createdAt,
+      empresaResponsable: apiClient.empresaResponsable || '',
+      dependencia: apiClient.dependencia || '',
+      hospital: apiClient.hospital || apiClient.name,
+      contrato: apiClient.contrato || '',
+      estado: apiClient.state || '',
+      ciudad: apiClient.city || '',
+      codigoPostal: apiClient.zipCode || '',
+      direccion: apiClient.address || '',
+      equipo: equipo.equipo || '',
+      marca: equipo.marca || '',
+      modelo: equipo.modelo || '',
+      numeroSerie: equipo.numeroSerie || '',
+      fechaInstalacion: equipo.fechaInstalacion || '',
+      ultimoMantenimiento: equipo.ultimoMantenimiento || '',
+      estatusAbril2025: metadata.estatusAbril2025 || '',
+      estatusInicio26: metadata.estatusInicio26 || '',
+      encargados: []
+    }))
+  }
+  
+  // Si no tiene equipos, devolver el cliente sin equipo
+  return [{
+    id: `${apiClient.id}`,
+    apiClientId: apiClient.id,
+    fechaCreacion: apiClient.createdAt,
+    empresaResponsable: apiClient.empresaResponsable || '',
+    dependencia: apiClient.dependencia || '',
+    hospital: apiClient.hospital || apiClient.name,
+    contrato: apiClient.contrato || '',
+    estado: apiClient.state || '',
+    ciudad: apiClient.city || '',
+    codigoPostal: apiClient.zipCode || '',
+    direccion: apiClient.address || '',
+    equipo: '',
+    marca: '',
+    modelo: '',
+    numeroSerie: '',
+    fechaInstalacion: '',
+    ultimoMantenimiento: '',
+    estatusAbril2025: metadata.estatusAbril2025 || '',
+    estatusInicio26: metadata.estatusInicio26 || '',
+    encargados: []
+  }]
+}
+
+/**
+ * Crear un cliente en la API
+ */
 export async function createClient(frontendData) {
-  // minimal server-side validation
-  if (!frontendData.empresaResponsable && !frontendData.name) {
-    return { success: false, error: 'empresaResponsable required' }
+  try {
+    const response = await post('/clients', frontendData)
+    const clients = mapApiClientToFrontend(response.data)
+    
+    // Actualizar caché
+    const cached = loadClientsFromCache()
+    clients.forEach(c => cached.unshift(c))
+    saveClientsToCache(cached)
+    
+    return { success: true, data: clients[0] }
+  } catch (error) {
+    console.error('Error creando cliente:', error)
+    return { success: false, error: error.message }
   }
-
-  const all = loadClients()
-  // check duplicates by empresaResponsable + numeroSerie
-  const dup = all.find(c => c.empresaResponsable === frontendData.empresaResponsable && c.numeroSerie === frontendData.numeroSerie)
-  const backend = mapFrontendToBackend(frontendData)
-
-  // simulate backend id and save
-  all.unshift(backend)
-  saveClients(all)
-
-  return { success: true, data: backend }
 }
 
+/**
+ * Crear múltiples clientes en lote (importación de Excel)
+ */
+export async function createClientsBatch(clientsData) {
+  try {
+    const response = await post('/clients/batch', { clients: clientsData })
+    
+    // Recargar todos los clientes
+    await listClients()
+    
+    return { 
+      success: true, 
+      data: response.data 
+    }
+  } catch (error) {
+    console.error('Error creando clientes en lote:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+/**
+ * Actualizar un cliente
+ */
 export async function updateClient(id, frontendData) {
-  const all = loadClients()
-  const index = all.findIndex(c => c.id === id)
-  if (index === -1) return { success: false, error: 'not_found' }
-  const backend = mapFrontendToBackend(frontendData)
-  all[index] = backend
-  saveClients(all)
-  return { success: true, data: backend }
+  try {
+    // Extraer el ID real de la API si viene en formato compuesto
+    const apiClientId = frontendData.apiClientId || id.toString().split('-')[0]
+    
+    const response = await put(`/clients/${apiClientId}`, frontendData)
+    const clients = mapApiClientToFrontend(response.data)
+    
+    // Actualizar caché
+    const cached = loadClientsFromCache()
+    const filtered = cached.filter(c => !c.id.startsWith(`${apiClientId}-`))
+    clients.forEach(c => filtered.push(c))
+    saveClientsToCache(filtered)
+    
+    return { success: true, data: clients[0] }
+  } catch (error) {
+    console.error('Error actualizando cliente:', error)
+    return { success: false, error: error.message }
+  }
 }
 
+/**
+ * Eliminar un cliente
+ */
 export async function deleteClient(id) {
-  const all = loadClients()
-  const next = all.filter(c => c.id !== id)
-  saveClients(next)
-  return { success: true }
+  try {
+    // Extraer el ID real de la API si viene en formato compuesto
+    const apiClientId = id.toString().includes('-') ? id.toString().split('-')[0] : id
+    
+    await del(`/clients/${apiClientId}`)
+    
+    // Actualizar caché
+    const cached = loadClientsFromCache()
+    const filtered = cached.filter(c => !c.id.startsWith(`${apiClientId}-`) && c.id !== id)
+    saveClientsToCache(filtered)
+    
+    return { success: true }
+  } catch (error) {
+    console.error('Error eliminando cliente:', error)
+    return { success: false, error: error.message }
+  }
 }
 
-export function listClients() {
-  const all = loadClients()
-  return all.map(mapBackendToFrontend)
-}
-
-export function mapBackendToFrontendPublic(b) {
-  return mapBackendToFrontend(b)
+/**
+ * Listar todos los clientes desde la API
+ */
+export async function listClients() {
+  try {
+    const response = await get('/clients')
+    const clients = response.data || []
+    
+    // Mapear cada cliente de la API al formato del frontend
+    const mappedClients = clients.flatMap(mapApiClientToFrontend)
+    
+    return mappedClients
+  } catch (error) {
+    console.error('Error al listar clientes:', error)
+    throw error
+  }
 }
 
 export default {
   createClient,
+  createClientsBatch,
   updateClient,
   deleteClient,
-  listClients,
-  mapBackendToFrontend: mapBackendToFrontendPublic
+  listClients
 }

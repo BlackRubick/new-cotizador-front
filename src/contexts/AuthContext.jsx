@@ -14,7 +14,9 @@ const rolePermissions = {
     'view_products',
     'admin_panel'
   ],
-  vendedor: ['view_home', 'view_quotes', 'create_quote', 'view_clients'],
+  // Ajuste: vendedores NO deben ver el dashboard (view_home), pero sí deben
+  // poder ver cotizaciones, clientes y productos.
+  vendedor: ['view_quotes', 'create_quote', 'view_clients', 'view_products'],
 }
 
 const AuthContext = createContext(null)

@@ -14,6 +14,79 @@ import {
   Hash
 } from 'lucide-react'
 
+// Mover InputField y OptionalInputField fuera del componente para evitar que
+// se re-creen en cada render y provoquen remounts (pérdida de foco).
+const InputField = React.memo(({ label, name, placeholder, icon: Icon, type = "text", error, touched, value, onChange, onFocus, onBlur, ...props }) => (
+  <div className="relative">
+    <label htmlFor={name} className="block text-sm font-semibold text-gray-700 mb-2">
+      {label}
+      <span className="text-red-500 ml-1">*</span>
+    </label>
+    <div className="relative">
+      {Icon && (
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <Icon className={`${error && touched ? 'text-red-400' : 'text-gray-400'} transition-colors`} size={18} />
+        </div>
+      )}
+      <input
+        id={name}
+        type={type}
+        value={value}
+        onChange={onChange}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        placeholder={placeholder}
+        className={`
+          w-full ${Icon ? 'pl-10' : 'pl-4'} pr-4 py-3 rounded-xl transition-all duration-200
+          ${error && touched
+            ? 'border-2 border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-200 bg-red-50'
+            : 'border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white'
+          }
+        `}
+        {...props}
+      />
+      {error && touched && (
+        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+          <AlertCircle className="text-red-500" size={18} />
+        </div>
+      )}
+    </div>
+    {error && touched && (
+      <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+        <AlertCircle size={14} />
+        {error}
+      </p>
+    )}
+  </div>
+))
+
+const OptionalInputField = React.memo(({ label, name, placeholder, icon: Icon, type = "text", hint, value, onChange, onFocus, onBlur, ...props }) => (
+  <div className="relative">
+    <label className="block text-sm font-semibold text-gray-700 mb-2">
+      {label}
+      <span className="text-gray-400 text-xs ml-2">(Opcional)</span>
+    </label>
+    <div className="relative">
+      {Icon && (
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <Icon className="text-gray-400" size={18} />
+        </div>
+      )}
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        placeholder={placeholder}
+        className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white transition-all"
+        {...props}
+      />
+    </div>
+    {hint && <p className="mt-1 text-xs text-gray-500">{hint}</p>}
+  </div>
+))
+
 export default function ClientForm({ initial = {}, onSave, onCancel }) {
   // Inicializar el formulario UNA SOLA VEZ con los datos iniciales
   const [form, setForm] = useState(() => {
@@ -89,75 +162,7 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
     }
   }
 
-  const InputField = ({ label, name, placeholder, icon: Icon, type = "text", error, ...props }) => (
-    <div className="relative">
-      <label htmlFor={name} className="block text-sm font-semibold text-gray-700 mb-2">
-        {label}
-        <span className="text-red-500 ml-1">*</span>
-      </label>
-      <div className="relative">
-        {Icon && (
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Icon className={`${error && touched[name] ? 'text-red-400' : 'text-gray-400'} transition-colors`} size={18} />
-          </div>
-        )}
-        <input
-          id={name}
-          type={type}
-          value={form[name] || ''}
-          onChange={e => handleChange(name, e.target.value)}
-          onFocus={() => handleFocus(name)}
-          onBlur={() => handleBlur(name)}
-          placeholder={placeholder}
-          className={`
-            w-full ${Icon ? 'pl-10' : 'pl-4'} pr-4 py-3 rounded-xl transition-all duration-200
-            ${error && touched[name]
-              ? 'border-2 border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-200 bg-red-50'
-              : 'border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white'
-            }
-          `}
-          {...props}
-        />
-        {error && touched[name] && (
-          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-            <AlertCircle className="text-red-500" size={18} />
-          </div>
-        )}
-      </div>
-      {error && touched[name] && (
-        <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-          <AlertCircle size={14} />
-          {error}
-        </p>
-      )}
-    </div>
-  )
-
-  const OptionalInputField = ({ label, name, placeholder, icon: Icon, type = "text", hint }) => (
-    <div className="relative">
-      <label className="block text-sm font-semibold text-gray-700 mb-2">
-        {label}
-        <span className="text-gray-400 text-xs ml-2">(Opcional)</span>
-      </label>
-      <div className="relative">
-        {Icon && (
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Icon className="text-gray-400" size={18} />
-          </div>
-        )}
-        <input
-          type={type}
-          value={form[name] || ''}
-          onChange={e => handleChange(name, e.target.value)}
-          onFocus={() => handleFocus(name)}
-          onBlur={() => handleBlur(name)}
-          placeholder={placeholder}
-          className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white transition-all"
-        />
-      </div>
-      {hint && <p className="mt-1 text-xs text-gray-500">{hint}</p>}
-    </div>
-  )
+  
 
   return (
     <form onSubmit={submit} className="space-y-8">
@@ -181,6 +186,11 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
             placeholder="Ej: Grupo Médico SA"
             icon={Building2}
             error={errors.empresaResponsable}
+            touched={!!touched.empresaResponsable}
+            value={form.empresaResponsable || ''}
+            onChange={e => handleChange('empresaResponsable', e.target.value)}
+            onFocus={() => handleFocus('empresaResponsable')}
+            onBlur={() => handleBlur('empresaResponsable')}
           />
           <InputField
             label="Dependencia"
@@ -188,6 +198,11 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
             placeholder="Ej: Secretaría de Salud"
             icon={Building2}
             error={errors.dependencia}
+            touched={!!touched.dependencia}
+            value={form.dependencia || ''}
+            onChange={e => handleChange('dependencia', e.target.value)}
+            onFocus={() => handleFocus('dependencia')}
+            onBlur={() => handleBlur('dependencia')}
           />
           <InputField
             label="Hospital"
@@ -195,6 +210,11 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
             placeholder="Ej: Hospital General"
             icon={Hospital}
             error={errors.hospital}
+            touched={!!touched.hospital}
+            value={form.hospital || ''}
+            onChange={e => handleChange('hospital', e.target.value)}
+            onFocus={() => handleFocus('hospital')}
+            onBlur={() => handleBlur('hospital')}
           />
         </div>
       </div>
@@ -218,6 +238,11 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
             placeholder="Ej: Ciudad de México"
             icon={MapPinned}
             error={errors.estado}
+            touched={!!touched.estado}
+            value={form.estado || ''}
+            onChange={e => handleChange('estado', e.target.value)}
+            onFocus={() => handleFocus('estado')}
+            onBlur={() => handleBlur('estado')}
           />
           <InputField
             label="Ciudad"
@@ -225,6 +250,11 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
             placeholder="Ej: Benito Juárez"
             icon={MapPin}
             error={errors.ciudad}
+            touched={!!touched.ciudad}
+            value={form.ciudad || ''}
+            onChange={e => handleChange('ciudad', e.target.value)}
+            onFocus={() => handleFocus('ciudad')}
+            onBlur={() => handleBlur('ciudad')}
           />
           <InputField
             label="Código Postal"
@@ -232,6 +262,11 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
             placeholder="Ej: 03100"
             icon={Hash}
             error={errors.codigoPostal}
+            touched={!!touched.codigoPostal}
+            value={form.codigoPostal || ''}
+            onChange={e => handleChange('codigoPostal', e.target.value)}
+            onFocus={() => handleFocus('codigoPostal')}
+            onBlur={() => handleBlur('codigoPostal')}
             maxLength={5}
           />
           <InputField
@@ -240,6 +275,11 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
             placeholder="Calle y número"
             icon={MapPin}
             error={errors.direccion}
+            touched={!!touched.direccion}
+            value={form.direccion || ''}
+            onChange={e => handleChange('direccion', e.target.value)}
+            onFocus={() => handleFocus('direccion')}
+            onBlur={() => handleBlur('direccion')}
           />
         </div>
       </div>
@@ -263,24 +303,44 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
             placeholder="Ej: Ventilador Mecánico"
             icon={Package}
             error={errors.equipo}
+            touched={!!touched.equipo}
+            value={form.equipo || ''}
+            onChange={e => handleChange('equipo', e.target.value)}
+            onFocus={() => handleFocus('equipo')}
+            onBlur={() => handleBlur('equipo')}
           />
           <InputField
             label="Marca"
             name="marca"
             placeholder="Ej: Philips"
             error={errors.marca}
+            touched={!!touched.marca}
+            value={form.marca || ''}
+            onChange={e => handleChange('marca', e.target.value)}
+            onFocus={() => handleFocus('marca')}
+            onBlur={() => handleBlur('marca')}
           />
           <InputField
             label="Modelo"
             name="modelo"
             placeholder="Ej: V60 Plus"
             error={errors.modelo}
+            touched={!!touched.modelo}
+            value={form.modelo || ''}
+            onChange={e => handleChange('modelo', e.target.value)}
+            onFocus={() => handleFocus('modelo')}
+            onBlur={() => handleBlur('modelo')}
           />
           <InputField
             label="Número de Serie"
             name="numeroSerie"
             placeholder="Ej: SN123456789"
             error={errors.numeroSerie}
+            touched={!!touched.numeroSerie}
+            value={form.numeroSerie || ''}
+            onChange={e => handleChange('numeroSerie', e.target.value)}
+            onFocus={() => handleFocus('numeroSerie')}
+            onBlur={() => handleBlur('numeroSerie')}
           />
         </div>
       </div>
@@ -304,6 +364,10 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
             placeholder="AAAA-MM-DD"
             icon={Calendar}
             type="date"
+            value={form.fechaInstalacion || ''}
+            onChange={e => handleChange('fechaInstalacion', e.target.value)}
+            onFocus={() => handleFocus('fechaInstalacion')}
+            onBlur={() => handleBlur('fechaInstalacion')}
           />
           <OptionalInputField
             label="Último Mantenimiento"
@@ -311,6 +375,10 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
             placeholder="AAAA-MM-DD"
             icon={Calendar}
             type="date"
+            value={form.ultimoMantenimiento || ''}
+            onChange={e => handleChange('ultimoMantenimiento', e.target.value)}
+            onFocus={() => handleFocus('ultimoMantenimiento')}
+            onBlur={() => handleBlur('ultimoMantenimiento')}
           />
         </div>
       </div>

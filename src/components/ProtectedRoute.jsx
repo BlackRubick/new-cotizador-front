@@ -22,6 +22,12 @@ export default function ProtectedRoute({ children, permission }) {
   }
 
   if (permission && !hasPermission(permission)) {
+    // Si el permiso solicitado es el dashboard y el usuario es un vendedor,
+    // redirigir automáticamente a /quotes en lugar de mostrar el mensaje.
+    if (permission === 'view_home' && user && user.role === 'vendedor') {
+      return <Navigate to="/quotes" replace />
+    }
+
     return <div className="p-8 text-center">No tienes permisos para ver esta página.</div>
   }
 

@@ -15,7 +15,12 @@ export default function LoginPage() {
   // Si el usuario ya está autenticado, redirigir al home
   useEffect(() => {
     if (user && !loading) {
-      navigate('/home', { replace: true })
+      // Redirigir según rol: los vendedores van a /quotes en lugar de /home
+      if (user.role === 'vendedor') {
+        navigate('/quotes', { replace: true })
+      } else {
+        navigate('/home', { replace: true })
+      }
     }
   }, [user, loading, navigate])
 
@@ -27,8 +32,20 @@ export default function LoginPage() {
     try {
       // Llamar al servicio de login que se conecta con la API
       await login(email, password)
-      // Si el login es exitoso, redirigir al home
-      navigate('/home')
+      // Si el login es exitoso, redirigir según rol del usuario autenticado
+      // `login` guarda el usuario en el contexto; obtenerlo desde localStorage
+      try {
+        const savedUserRaw = localStorage.getItem('auth_user')
+        const savedUser = savedUserRaw ? JSON.parse(savedUserRaw) : null
+        if (savedUser && savedUser.role === 'vendedor') {
+          navigate('/quotes', { replace: true })
+        } else {
+          navigate('/home', { replace: true })
+        }
+      } catch (e) {
+        // Fallback
+        navigate('/home', { replace: true })
+      }
     } catch (err) {
       // Mostrar error al usuario
       setError(err.message || 'Error al iniciar sesión. Verifica tus credenciales.')

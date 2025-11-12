@@ -17,11 +17,14 @@ export default function UsersPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingUser, setEditingUser] = useState(null) // Usuario en edición
 
+  // NOTE: backend (Prisma) espera assignedCompanyId como Int or null.
+  // Añadimos `dbId` con los identificadores numéricos que se deben usar en la API.
+  // Si tus ids reales son distintos, reemplázalos por los valores correctos del backend.
   const sellerCompanies = [
-    { id: 'conduit-life', name: 'CONDUIT LIFE', fullName: 'Conduit Life S.A. de C.V.' },
-    { id: 'biosystems-hls', name: 'BIOSYSTEMS HLS', fullName: 'Biosystems HLS S.A. de C.V.' },
-    { id: 'ingenieria-clinica', name: 'INGENIERÍA CLÍNICA Y DISEÑO', fullName: 'Ingeniería Clínica y Diseño S.A. de C.V.' },
-    { id: 'escala-biomedica', name: 'ESCALA BIOMÉDICA', fullName: 'Escala Biomédica S.A. de C.V.' }
+    { id: 'conduit-life', dbId: 1, name: 'CONDUIT LIFE', fullName: 'Conduit Life S.A. de C.V.' },
+    { id: 'biosystems-hls', dbId: 2, name: 'BIOSYSTEMS HLS', fullName: 'Biosystems HLS S.A. de C.V.' },
+    { id: 'ingenieria-clinica', dbId: 3, name: 'INGENIERÍA CLÍNICA Y DISEÑO', fullName: 'Ingeniería Clínica y Diseño S.A. de C.V.' },
+    { id: 'escala-biomedica', dbId: 4, name: 'ESCALA BIOMÉDICA', fullName: 'Escala Biomédica S.A. de C.V.' }
   ]
 
   useEffect(() => {
@@ -69,6 +72,11 @@ export default function UsersPage() {
     }
 
     try {
+      // Convertir el slug (assignedCompanyId string en el select) al dbId (Int) que espera la API
+      const assignedDbId = role === 'vendedor' && assignedCompanyId
+        ? (sellerCompanies.find(s => s.id === assignedCompanyId)?.dbId ?? null)
+        : null
+
       const newUser = { 
         name,
         email, 
@@ -76,7 +84,7 @@ export default function UsersPage() {
         role, 
         extra: { 
           canModifyPrices: role === 'admin' ? canModifyPrices : false,
-          assignedCompanyId: role === 'vendedor' ? (assignedCompanyId || null) : null
+          assignedCompanyId: role === 'vendedor' ? assignedDbId : null
         }
       }
       
@@ -159,7 +167,12 @@ export default function UsersPage() {
     setPassword('') // Dejamos vacío, solo se cambiará si el usuario ingresa una nueva
     setRole(userToEdit.role)
     setCanModifyPrices(userToEdit.extra?.canModifyPrices || false)
-    setAssignedCompanyId(userToEdit.extra?.assignedCompanyId || '')
+    // userToEdit.extra.assignedCompanyId viene del backend como Int (dbId).
+    // Convertimos el dbId a nuestro slug (id) para que el select lo pueda seleccionar.
+    const assignedSlug = userToEdit.extra?.assignedCompanyId
+      ? (sellerCompanies.find(s => s.dbId === userToEdit.extra.assignedCompanyId)?.id || '')
+      : ''
+    setAssignedCompanyId(assignedSlug)
     setShowForm(true)
   }
 
@@ -179,13 +192,17 @@ export default function UsersPage() {
     }
 
     try {
+      const assignedDbId = role === 'vendedor' && assignedCompanyId
+        ? (sellerCompanies.find(s => s.id === assignedCompanyId)?.dbId ?? null)
+        : null
+
       const updatedData = { 
         name,
         email,
         role, 
         extra: { 
           canModifyPrices: role === 'admin' ? canModifyPrices : false,
-          assignedCompanyId: role === 'vendedor' ? (assignedCompanyId || null) : null
+          assignedCompanyId: role === 'vendedor' ? assignedDbId : null
         }
       }
       
@@ -520,7 +537,7 @@ export default function UsersPage() {
                                   const comp = sellerCompanies.find(s => s.id === u.extra.assignedCompanyId)
                                   return (
                                     <span key={u.id + '-comp'} className="flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-700 rounded-md text-xs font-semibold border border-gray-200 whitespace-nowrap">
-                                      {comp ? comp.name : u.extra.assignedCompanyId}
+                                          {comp ? comp.name : u.extra.assignedCompanyId}
                                     </span>
                                   )
                                 })()

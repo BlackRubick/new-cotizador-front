@@ -212,6 +212,7 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
             onChange={e => handleChange('empresaResponsable', e.target.value)}
             onFocus={() => handleFocus('empresaResponsable')}
             onBlur={() => handleBlur('empresaResponsable')}
+            disabled={isSeller && isEditMode}
           />
           <InputField
             label="Dependencia"
@@ -224,6 +225,7 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
             onChange={e => handleChange('dependencia', e.target.value)}
             onFocus={() => handleFocus('dependencia')}
             onBlur={() => handleBlur('dependencia')}
+            disabled={isSeller && isEditMode}
           />
           <InputField
             label="Hospital"
@@ -236,6 +238,7 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
             onChange={e => handleChange('hospital', e.target.value)}
             onFocus={() => handleFocus('hospital')}
             onBlur={() => handleBlur('hospital')}
+            disabled={isSeller && isEditMode}
           />
         </div>
       </div>
@@ -264,6 +267,7 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
             onChange={e => handleChange('estado', e.target.value)}
             onFocus={() => handleFocus('estado')}
             onBlur={() => handleBlur('estado')}
+            disabled={isSeller && isEditMode}
           />
           <InputField
             label="Ciudad"
@@ -276,6 +280,7 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
             onChange={e => handleChange('ciudad', e.target.value)}
             onFocus={() => handleFocus('ciudad')}
             onBlur={() => handleBlur('ciudad')}
+            disabled={isSeller && isEditMode}
           />
           <InputField
             label="Código Postal"
@@ -289,6 +294,7 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
             onFocus={() => handleFocus('codigoPostal')}
             onBlur={() => handleBlur('codigoPostal')}
             maxLength={5}
+            disabled={isSeller && isEditMode}
           />
           <InputField
             label="Dirección"
@@ -301,6 +307,7 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
             onChange={e => handleChange('direccion', e.target.value)}
             onFocus={() => handleFocus('direccion')}
             onBlur={() => handleBlur('direccion')}
+            disabled={isSeller && isEditMode}
           />
         </div>
       </div>
@@ -329,6 +336,7 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
             onChange={e => handleChange('equipo', e.target.value)}
             onFocus={() => handleFocus('equipo')}
             onBlur={() => handleBlur('equipo')}
+            disabled={isSeller && isEditMode}
           />
           <InputField
             label="Marca"
@@ -340,6 +348,7 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
             onChange={e => handleChange('marca', e.target.value)}
             onFocus={() => handleFocus('marca')}
             onBlur={() => handleBlur('marca')}
+            disabled={isSeller && isEditMode}
           />
           <InputField
             label="Modelo"
@@ -351,6 +360,7 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
             onChange={e => handleChange('modelo', e.target.value)}
             onFocus={() => handleFocus('modelo')}
             onBlur={() => handleBlur('modelo')}
+            disabled={isSeller && isEditMode}
           />
           <InputField
             label="Número de Serie"
@@ -362,6 +372,7 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
             onChange={e => handleChange('numeroSerie', e.target.value)}
             onFocus={() => handleFocus('numeroSerie')}
             onBlur={() => handleBlur('numeroSerie')}
+            disabled={isSeller && isEditMode}
           />
         </div>
       </div>
@@ -389,6 +400,7 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
             onChange={e => handleChange('fechaInstalacion', e.target.value)}
             onFocus={() => handleFocus('fechaInstalacion')}
             onBlur={() => handleBlur('fechaInstalacion')}
+            disabled={isSeller && isEditMode}
           />
           <OptionalInputField
             label="Último Mantenimiento"
@@ -400,6 +412,7 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
             onChange={e => handleChange('ultimoMantenimiento', e.target.value)}
             onFocus={() => handleFocus('ultimoMantenimiento')}
             onBlur={() => handleBlur('ultimoMantenimiento')}
+            disabled={isSeller && isEditMode}
           />
         </div>
       </div>

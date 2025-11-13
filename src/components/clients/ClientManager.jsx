@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { confirmDialog, alertInfo, alertSuccess } from '../../utils/swal'
 import ClientForm from './ClientForm'
 import clientService from '../../services/clientService'
+import { useAuth } from '../../contexts/AuthContext'
 import { 
   Building2, 
   Upload, 
@@ -34,6 +35,8 @@ export default function ClientManager() {
   const [filterEstado, setFilterEstado] = useState('')
   const [importing, setImporting] = useState(false)
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const isSeller = user && user.role === 'vendedor'
 
   useEffect(() => {
     async function loadClients() {
@@ -222,6 +225,11 @@ export default function ClientManager() {
   const [openGroup, setOpenGroup] = useState(null)
 
   async function handleStartEditEquipment(eq) {
+    // Prevent sellers from editing equipment inline
+    if (isSeller) {
+      await alertInfo('No tienes permiso para editar información del equipo. Si necesitas actualizar encargados, hazlo desde la edición de encargados.')
+      return
+    }
     const key = eq._clientId || `${eq.nombre}-${Math.random()}`
     setEditingEquipments(prev => ({ ...prev, [key]: { ...eq } }))
   }
@@ -242,6 +250,11 @@ export default function ClientManager() {
     const original = clients.find(c => c.id === key)
     if (!original) {
       await alertInfo('No se encontró el cliente origen del equipo')
+      return
+    }
+    // Prevent sellers from saving equipment changes
+    if (isSeller) {
+      await alertInfo('No tienes permiso para actualizar información del equipo.')
       return
     }
     const payload = {
@@ -688,7 +701,9 @@ export default function ClientManager() {
                           </div>
 
                           <div className="flex justify-end mt-1 sm:mt-2">
-                            <button onClick={() => handleStartEditEquipment(eq)} className="px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-blue-100 text-blue-700 rounded-md sm:rounded-lg">Editar</button>
+                            {!isSeller && (
+                              <button onClick={() => handleStartEditEquipment(eq)} className="px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-blue-100 text-blue-700 rounded-md sm:rounded-lg">Editar</button>
+                            )}
                           </div>
                         </>
                       )}

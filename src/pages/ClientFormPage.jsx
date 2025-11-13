@@ -37,7 +37,14 @@ export default function ClientFormPage() {
 
   async function handleSave(data) {
     if (id) {
-      const res = await clientService.updateClient(id, data)
+      // Si el payload viene solo con encargados (por permisos de vendedor),
+      // fusionar con los datos iniciales para evitar enviar un objeto parcial
+      // que pudiera sobrescribir campos en el backend que espera el objeto completo.
+      const payload = (data && Object.keys(data).length === 1 && data.encargados)
+        ? { ...initial, encargados: data.encargados }
+        : data
+
+      const res = await clientService.updateClient(id, payload)
       if (!res.success) await alertError('Error actualizando: ' + res.error)
     } else {
       const res = await clientService.createClient(data)

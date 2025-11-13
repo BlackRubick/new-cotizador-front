@@ -300,30 +300,33 @@ export default function QuoteForm({ onCreated, initial = null, onUpdated }) {
     }
   }, [sellerCompanyId])
 
-  // If logged in user is a vendedor with an assignedCompanyId, force that company
-  useEffect(() => {
+  // Robust detection of assigned company for vendedores (accept slug, numeric id or numeric string)
+  const assignedRevMap = useMemo(() => ({ 2: 'conduit-life', 3: 'biosystems-hls', 4: 'ingenieria-clinica', 5: 'escala-biomedica' }), [])
+
+  const forcedAssignedCompany = useMemo(() => {
     try {
-      if (user && user.role === 'vendedor' && user.extra && user.extra.assignedCompanyId) {
-        const assignedRaw = user.extra.assignedCompanyId
-        // assignedCompanyId puede venir como slug ('conduit-life') o como ID numérico (2)
-        let assigned = assignedRaw
-        if (typeof assignedRaw === 'number' || (/^\d+$/.test(String(assignedRaw)))) {
-          const rev = {
-            2: 'conduit-life',
-            3: 'biosystems-hls',
-            4: 'ingenieria-clinica',
-            5: 'escala-biomedica'
-          }
-          assigned = rev[Number(assignedRaw)] || String(assignedRaw)
-        }
-        setSellerCompanyId(assigned)
-        const s = sellerCompanies.find(x => x.id === assigned)
-        if (s) setSellerCompany(s.name)
+      if (!user || user.role !== 'vendedor') return null
+      // support different shapes / keys: assignedCompanyId or assignedCompany
+      const raw = (user.extra && (user.extra.assignedCompanyId ?? user.extra.assignedCompany)) ?? null
+      if (raw === null || typeof raw === 'undefined' || raw === '') return null
+      let assigned = raw
+      if (typeof assigned === 'string') assigned = assigned.trim()
+      if (typeof assigned === 'number' || (/^\d+$/.test(String(assigned)))) {
+        assigned = assignedRevMap[Number(assigned)] || String(assigned)
       }
+      return String(assigned)
     } catch (e) {
-      // ignore
+      return null
     }
-  }, [user])
+  }, [user, assignedRevMap])
+
+  // When a forced assignment exists, ensure the form state reflects it and keep sellerCompany locked
+  useEffect(() => {
+    if (!forcedAssignedCompany) return
+    setSellerCompanyId(forcedAssignedCompany)
+    const s = sellerCompanies.find(x => x.id === forcedAssignedCompany)
+    if (s) setSellerCompany(s.name)
+  }, [forcedAssignedCompany])
 
   const navigate = useNavigate()
 
@@ -340,8 +343,11 @@ export default function QuoteForm({ onCreated, initial = null, onUpdated }) {
         if (draft.email) setEmail(draft.email)
         if (draft.phone) setPhone(draft.phone)
         if (draft.clientAddress) setClientAddress(draft.clientAddress)
-        if (draft.sellerCompanyId) setSellerCompanyId(draft.sellerCompanyId)
-        if (draft.sellerCompany) setSellerCompany(draft.sellerCompany)
+        // only restore sellerCompanyId/sellerCompany if there is no forced assignment for this vendedor
+        if (!forcedAssignedCompany) {
+          if (draft.sellerCompanyId) setSellerCompanyId(draft.sellerCompanyId)
+          if (draft.sellerCompany) setSellerCompany(draft.sellerCompany)
+        }
         // restore selected client/encargado if present
         if (draft.selectedClientId) setSelectedClientId(draft.selectedClientId)
         if (draft.selectedEncargadoId) setSelectedEncargadoId(draft.selectedEncargadoId)
@@ -437,7 +443,7 @@ export default function QuoteForm({ onCreated, initial = null, onUpdated }) {
     } catch (e) {
       console.warn('No draft found or invalid draft', e)
     }
-  }, [])
+  }, [forcedAssignedCompany])
 
   // If `initial` prop is provided (edit mode), load it into state
   useEffect(() => {
@@ -449,8 +455,9 @@ export default function QuoteForm({ onCreated, initial = null, onUpdated }) {
       console.log('initial.clientContact:', initial.clientContact)
       console.log('initial.clientAddress:', initial.clientAddress)
       
-      setSellerCompany(initial.sellerCompany || '')
-      setSellerCompanyId(initial.sellerCompanyId || '')
+  setSellerCompany(initial.sellerCompany || '')
+  // Do not override a forced assigned company for vendedores
+  if (!forcedAssignedCompany) setSellerCompanyId(initial.sellerCompanyId || '')
       setClientName(initial.clientName || '')
       setClientContact(initial.clientContact || '')
       setEmail(initial.email || '')
@@ -484,7 +491,7 @@ export default function QuoteForm({ onCreated, initial = null, onUpdated }) {
     } catch (e) {
       console.warn('Failed to load initial quote into form', e)
     }
-  }, [initial, clients])
+  }, [initial, clients, forcedAssignedCompany])
 
   function handleConfirmClient() {
     if (!selectedClientPreview) return
@@ -579,8 +586,12 @@ export default function QuoteForm({ onCreated, initial = null, onUpdated }) {
               <label className="block text-sm font-semibold text-slate-700 mb-2">Seleccionar empresa</label>
               <select 
                 value={sellerCompanyId || ''} 
-                onChange={e => setSellerCompanyId(e.target.value || '')} 
-                disabled={user && user.role === 'vendedor' && user.extra && user.extra.assignedCompanyId}
+                onChange={e => {
+                  // If the company is forced for this vendedor, ignore manual changes
+                  if (typeof forcedAssignedCompany !== 'undefined' && forcedAssignedCompany) return
+                  setSellerCompanyId(e.target.value || '')
+                }} 
+                disabled={!!forcedAssignedCompany}
                 className="w-full border-2 border-slate-200 rounded-lg px-4 py-3 bg-white focus:border-blue-500 focus:outline-none transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 <option value="">-- Selecciona la empresa vendedora --</option>
@@ -588,8 +599,8 @@ export default function QuoteForm({ onCreated, initial = null, onUpdated }) {
                   <option key={s.id} value={s.id}>{s.name}</option>
                 ))}
               </select>
-              {user && user.role === 'vendedor' && user.extra && user.extra.assignedCompanyId ? (
-                <p className="text-sm text-slate-500 mt-2">Empresa asignada: {selectedSeller ? selectedSeller.name : user.extra.assignedCompanyId}</p>
+              {forcedAssignedCompany ? (
+                <p className="text-sm text-slate-500 mt-2">Empresa asignada: {selectedSeller ? selectedSeller.name : forcedAssignedCompany}</p>
               ) : null}
               {errors.sellerCompany && (
                 <p className="text-red-500 text-sm mt-2 flex items-center gap-1">

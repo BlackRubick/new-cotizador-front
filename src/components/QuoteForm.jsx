@@ -331,6 +331,17 @@ export default function QuoteForm({ onCreated, initial = null, onUpdated }) {
     if (s) setSellerCompany(s.name)
   }, [forcedAssignedCompany])
 
+  // Debug: print user and computed forcedAssignedCompany so dev can inspect auth payload
+  useEffect(() => {
+    try {
+      console.debug('[QuoteForm] auth user:', user)
+      console.debug('[QuoteForm] auth user.extra:', user?.extra)
+      console.debug('[QuoteForm] forcedAssignedCompany:', forcedAssignedCompany)
+    } catch (e) {
+      // ignore
+    }
+  }, [user, forcedAssignedCompany])
+
   const navigate = useNavigate()
 
   useEffect(() => {

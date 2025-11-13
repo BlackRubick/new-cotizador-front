@@ -304,7 +304,18 @@ export default function QuoteForm({ onCreated, initial = null, onUpdated }) {
   useEffect(() => {
     try {
       if (user && user.role === 'vendedor' && user.extra && user.extra.assignedCompanyId) {
-        const assigned = user.extra.assignedCompanyId
+        const assignedRaw = user.extra.assignedCompanyId
+        // assignedCompanyId puede venir como slug ('conduit-life') o como ID numérico (2)
+        let assigned = assignedRaw
+        if (typeof assignedRaw === 'number' || (/^\d+$/.test(String(assignedRaw)))) {
+          const rev = {
+            2: 'conduit-life',
+            3: 'biosystems-hls',
+            4: 'ingenieria-clinica',
+            5: 'escala-biomedica'
+          }
+          assigned = rev[Number(assignedRaw)] || String(assignedRaw)
+        }
         setSellerCompanyId(assigned)
         const s = sellerCompanies.find(x => x.id === assigned)
         if (s) setSellerCompany(s.name)

@@ -334,9 +334,17 @@ export default function QuoteForm({ onCreated, initial = null, onUpdated }) {
   // Debug: print user and computed forcedAssignedCompany so dev can inspect auth payload
   useEffect(() => {
     try {
-      console.debug('[QuoteForm] auth user:', user)
-      console.debug('[QuoteForm] auth user.extra:', user?.extra)
-      console.debug('[QuoteForm] forcedAssignedCompany:', forcedAssignedCompany)
+      console.log('[QuoteForm] auth user:', user)
+      console.log('[QuoteForm] auth user.extra:', user?.extra)
+      // also log assignedCompanyId raw value and its type so we can inspect DB shape
+      try {
+        const raw = user?.extra && (user.extra.assignedCompanyId ?? user.extra.assignedCompany)
+        console.log('[QuoteForm] assignedCompany raw:', raw, 'type:', typeof raw)
+      } catch (err) {
+        console.log('[QuoteForm] failed reading assignedCompany raw', err)
+      }
+      console.log('[QuoteForm] forcedAssignedCompany:', forcedAssignedCompany)
+      console.log('[QuoteForm] sellerCompanyId (state):', sellerCompanyId)
     } catch (e) {
       // ignore
     }

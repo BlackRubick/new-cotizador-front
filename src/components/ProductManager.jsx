@@ -4,6 +4,7 @@ import { Upload, FileText, Search, X, Trash2, Package, Wrench, Shirt, Droplet, L
 import ProductImage from './ProductImage'
 import { useNavigate } from 'react-router-dom'
 import { confirmDialog, toastSuccess, toastError, alertInfo, alertSuccess } from '../utils/swal'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function ProductManager() {
   const [products, setProducts] = useState([])
@@ -105,6 +106,9 @@ export default function ProductManager() {
 
   const draftActive = typeof window !== 'undefined' && !!sessionStorage.getItem('quote_draft')
   const navigate = useNavigate()
+
+  const { user } = useAuth()
+  const isSeller = user && user.role === 'vendedor'
 
   const [draftCount, setDraftCount] = useState(() => {
     try {
@@ -290,11 +294,13 @@ export default function ProductManager() {
           <h2 className="text-3xl font-bold text-med-primary">Productos</h2>
         </div>
         <div className="flex items-center gap-3">
-          <label className={`relative flex items-center gap-2 px-4 py-3 rounded-xl font-medium text-sm cursor-pointer transition-all ${importing ? 'bg-med-bg-100 text-med-slate-500' : 'bg-med-primary text-white hover:bg-med-primary-500 hover:shadow'}`}>
-            <input type="file" accept=".xlsx,.xls" onChange={e=>handleImportExcel(e.target.files?.[0])} className="hidden" disabled={importing} />
-            <Upload size={18} />
-            <span>{importing ? 'Importando...' : 'Importar Excel'}</span>
-          </label>
+          {!isSeller && (
+            <label className={`relative flex items-center gap-2 px-4 py-3 rounded-xl font-medium text-sm cursor-pointer transition-all ${importing ? 'bg-med-bg-100 text-med-slate-500' : 'bg-med-primary text-white hover:bg-med-primary-500 hover:shadow'}`}>
+              <input type="file" accept=".xlsx,.xls" onChange={e=>handleImportExcel(e.target.files?.[0])} className="hidden" disabled={importing} />
+              <Upload size={18} />
+              <span>{importing ? 'Importando...' : 'Importar Excel'}</span>
+            </label>
+          )}
         </div>
       </div>
 

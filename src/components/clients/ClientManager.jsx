@@ -451,14 +451,16 @@ export default function ClientManager() {
                       </span>
                     )}
 
-                    {/* Botón eliminar rápido para el cliente representativo */}
-                    <button
-                      onClick={() => handleDelete(g.sample.id)}
-                      title="Eliminar cliente representativo"
-                      className="p-1.5 sm:p-2 bg-white/60 hover:bg-red-50 rounded-full text-red-600 hover:text-red-700 transition-colors border border-transparent hover:border-red-100 flex-shrink-0"
-                    >
-                      <Trash2 size={16} className="sm:w-[18px] sm:h-[18px]" />
-                    </button>
+                    {/* Botón eliminar rápido para el cliente representativo (solo para roles con permiso) */}
+                    {!isSeller && (
+                      <button
+                        onClick={() => handleDelete(g.sample.id)}
+                        title="Eliminar cliente representativo"
+                        className="p-1.5 sm:p-2 bg-white/60 hover:bg-red-50 rounded-full text-red-600 hover:text-red-700 transition-colors border border-transparent hover:border-red-100 flex-shrink-0"
+                      >
+                        <Trash2 size={16} className="sm:w-[18px] sm:h-[18px]" />
+                      </button>
+                    )}
                   </div>
                 </div>
 

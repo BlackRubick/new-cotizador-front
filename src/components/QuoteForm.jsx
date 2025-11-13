@@ -190,6 +190,79 @@ export default function QuoteForm({ onCreated, initial = null, onUpdated }) {
     }
   }, [clients])
 
+  /* Searchable client select: permite buscar por texto y seleccionar un cliente
+     - options: lista de clientes (uniqueClients)
+     - value: id seleccionado
+     - onChange: callback con el id seleccionado (o null)
+*/
+  function ClientSearchSelect({ options, value, onChange, placeholder }) {
+    const [query, setQuery] = useState('')
+    const [open, setOpen] = useState(false)
+    const containerRef = useRef(null)
+
+    useEffect(() => {
+      // cuando cambia el value, actualizar el texto del input
+      const sel = options.find(o => o.id === value || String(o.id) === String(value)) || null
+      setQuery(sel ? (sel.hospital || sel.empresaResponsable || sel.name || '') : '')
+    }, [value, options])
+
+    useEffect(() => {
+      function onDocClick(e) {
+        if (containerRef.current && !containerRef.current.contains(e.target)) {
+          setOpen(false)
+        }
+      }
+      document.addEventListener('click', onDocClick)
+      return () => document.removeEventListener('click', onDocClick)
+    }, [])
+
+    const filtered = useMemo(() => {
+      const q = (query || '').toString().trim().toLowerCase()
+      if (!q) return options
+      return options.filter(o => (o.hospital || o.empresaResponsable || o.name || '').toString().toLowerCase().includes(q))
+    }, [options, query])
+
+    return (
+      <div ref={containerRef} className="relative">
+        <input
+          type="text"
+          value={query}
+          onChange={e => {
+            const v = e.target.value
+            setQuery(v)
+            setOpen(true)
+            // si el usuario escribe, limpiar selección previa
+            if (onChange) onChange(null)
+          }}
+          onFocus={() => setOpen(true)}
+          placeholder={placeholder}
+          className="w-full border-2 border-slate-200 rounded-lg px-4 py-3 bg-white focus:border-blue-500 focus:outline-none transition-colors"
+        />
+
+        {open && filtered && filtered.length > 0 && (
+          <ul className="absolute z-40 left-0 right-0 mt-1 max-h-60 overflow-auto bg-white border-2 border-slate-200 rounded-lg shadow-lg">
+            {filtered.map(c => (
+              <li
+                key={c.id}
+                onMouseDown={(ev) => {
+                  // usar onMouseDown para evitar que el blur del input cierre antes del click
+                  ev.preventDefault()
+                  if (onChange) onChange(c.id)
+                  setQuery(c.hospital || c.empresaResponsable || c.name || '')
+                  setOpen(false)
+                }}
+                className="px-4 py-2 hover:bg-slate-100 cursor-pointer"
+              >
+                <div className="font-medium text-sm">{c.hospital || c.empresaResponsable || c.name}</div>
+                <div className="text-xs text-slate-500">{c.dependencia || c.estado || ''}</div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    )
+  }
+
   useEffect(() => {
     if (!selectedClientId) {
       setSelectedClientPreview(null)
@@ -542,16 +615,12 @@ export default function QuoteForm({ onCreated, initial = null, onUpdated }) {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Cliente existente</label>
-              <select 
-                value={selectedClientId || ''} 
-                onChange={e => setSelectedClientId(e.target.value || null)} 
-                className="w-full border-2 border-slate-200 rounded-lg px-4 py-3 bg-white focus:border-blue-500 focus:outline-none transition-colors"
-              >
-                <option value="">-- Selecciona un cliente existente --</option>
-                {uniqueClients.map(c => (
-                  <option key={c.id} value={c.id}>{c.hospital || c.empresaResponsable || c.name}</option>
-                ))}
-              </select>
+              <ClientSearchSelect
+                options={uniqueClients}
+                value={selectedClientId}
+                onChange={id => setSelectedClientId(id)}
+                placeholder={"-- Selecciona un cliente existente --"}
+              />
             </div>
 
             {selectedClientPreview && (

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useLayoutEffect, useCallback } from 'react'
+import { useAuth } from '../../contexts/AuthContext'
 import EncargadosManager from './EncargadosManager'
 import { 
   Building2, 
@@ -16,7 +17,7 @@ import {
 
 // Mover InputField y OptionalInputField fuera del componente para evitar que
 // se re-creen en cada render y provoquen remounts (pérdida de foco).
-const InputField = React.memo(({ label, name, placeholder, icon: Icon, type = "text", error, touched, value, onChange, onFocus, onBlur, ...props }) => (
+  const InputField = React.memo(({ label, name, placeholder, icon: Icon, type = "text", error, touched, value, onChange, onFocus, onBlur, disabled, ...props }) => (
   <div className="relative">
     <label htmlFor={name} className="block text-sm font-semibold text-gray-700 mb-2">
       {label}
@@ -35,6 +36,7 @@ const InputField = React.memo(({ label, name, placeholder, icon: Icon, type = "t
         onChange={onChange}
         onFocus={onFocus}
         onBlur={onBlur}
+        disabled={disabled}
         placeholder={placeholder}
         className={`
           w-full ${Icon ? 'pl-10' : 'pl-4'} pr-4 py-3 rounded-xl transition-all duration-200
@@ -78,6 +80,7 @@ const OptionalInputField = React.memo(({ label, name, placeholder, icon: Icon, t
         onChange={onChange}
         onFocus={onFocus}
         onBlur={onBlur}
+        disabled={props.disabled}
         placeholder={placeholder}
         className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white transition-all"
         {...props}
@@ -103,6 +106,10 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
 
   const focusedRef = useRef(null)
 
+  const { user } = useAuth()
+  const isSeller = user && user.role === 'vendedor'
+  const isEditMode = Boolean(initial && (initial.id || initial.apiClientId))
+
   function handleChange(key, value) {
     setForm(prev => ({ ...prev, [key]: value }))
     // Limpiar error cuando el usuario empieza a escribir
@@ -125,6 +132,14 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
 
   function validateForm() {
     const e = {}
+    // Si el usuario es vendedor y estamos editando un cliente, solo validar encargados
+    if (isSeller && isEditMode) {
+      if (!form.encargados || form.encargados.filter(x=>x && x.nombre).length === 0) e.encargados = 'Se requiere al menos un encargado'
+      const isValid = Object.keys(e).length === 0
+      setErrors(e)
+      return { isValid, errors: e }
+    }
+
     const req = ['empresaResponsable','dependencia','hospital','estado','ciudad','codigoPostal','direccion','equipo','marca','modelo','numeroSerie']
     req.forEach(k => { if (!form[k]) e[k] = 'Campo requerido' })
     if (form.codigoPostal && !/^[0-9]{5}$/.test(form.codigoPostal)) e.codigoPostal = 'Código postal debe tener 5 dígitos'
@@ -154,7 +169,13 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
     }
     
     try {
-      onSave && await onSave(form)
+      // Si el usuario es vendedor y está editando, solo enviar los encargados
+      if (isSeller && isEditMode) {
+        const payload = { encargados: form.encargados }
+        onSave && await onSave(payload)
+      } else {
+        onSave && await onSave(form)
+      }
     } catch (error) {
       console.error('Error al guardar:', error)
     } finally {
@@ -449,7 +470,7 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
           ) : (
             <>
               <Save size={20} />
-              <span>Guardar Cliente</span>
+              <span>{isSeller && isEditMode ? 'Guardar Encargados' : 'Guardar Cliente'}</span>
             </>
           )}
         </button>

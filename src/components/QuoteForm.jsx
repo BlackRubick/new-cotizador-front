@@ -312,7 +312,10 @@ export default function QuoteForm({ onCreated, initial = null, onUpdated }) {
       let assigned = raw
       if (typeof assigned === 'string') assigned = assigned.trim()
       if (typeof assigned === 'number' || (/^\d+$/.test(String(assigned)))) {
-        assigned = assignedRevMap[Number(assigned)] || String(assigned)
+        // map numeric company IDs to known slugs; if unknown, do not force
+        const mapped = assignedRevMap[Number(assigned)]
+        if (!mapped) return null
+        assigned = mapped
       }
       return String(assigned)
     } catch (e) {

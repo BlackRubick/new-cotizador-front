@@ -34,7 +34,7 @@ function AppRoutes() {
           path="/quotes"
           element={
             <ProtectedRoute permission="view_quotes">
-              <QuotesPa ge />
+              <QuotesPage />
             </ProtectedRoute>
           }
         />

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import MainTemplate from '../templates/MainTemplate'
 import quoteService from '../services/quoteService'
+import { useAuth } from '../contexts/AuthContext'
 import QuoteCard from '../components/QuoteCard'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Search, X, RefreshCw } from 'lucide-react'
@@ -9,6 +10,7 @@ export default function QuotesPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const [quotes, setQuotes] = useState([])
+  const { user } = useAuth()
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -16,7 +18,22 @@ export default function QuotesPage() {
   const loadQuotes = async () => {
     setLoading(true)
     const list = await quoteService.listQuotes()
-    setQuotes(list || [])
+    let filtered = list || []
+    try {
+      if (user && user.role === 'vendedor') {
+        // vendedores solo ven sus propias cotizaciones
+        filtered = filtered.filter(q => {
+          // Prefer sellerId, fallback to sellerEmail or seller name
+          if (q.sellerId && user.id && String(q.sellerId) === String(user.id)) return true
+          if (q.sellerEmail && user.email && String(q.sellerEmail).toLowerCase() === String(user.email).toLowerCase()) return true
+          if (q.seller && user.name && String(q.seller) === String(user.name)) return true
+          return false
+        })
+      }
+    } catch (err) {
+      console.warn('Error filtering quotes by user role', err)
+    }
+    setQuotes(filtered)
     setLoading(false)
   }
 
@@ -28,7 +45,7 @@ export default function QuotesPage() {
   // Recargar cada vez que se navega a esta ruta (incluyendo con botón atrás)
   useEffect(() => {
     loadQuotes()
-  }, [location.pathname, location.key])
+  }, [location.pathname, location.key, user])
 
   return (
     <MainTemplate>

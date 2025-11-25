@@ -98,7 +98,12 @@ function EncargadosManager({ value = [], onChange }) {
     }
     const next = [nuevo, ...lista]
     setLista(next)
-    onChange && onChange(next)
+    try {
+      console.log('[EncargadosManager] addEncargado -> next list:', next)
+      onChange && onChange(next)
+    } catch (err) {
+      console.error('[EncargadosManager] onChange threw in addEncargado', err)
+    }
     
     // Limpiar campos
     setNombre('')
@@ -111,12 +116,14 @@ function EncargadosManager({ value = [], onChange }) {
   async function removeEncargado(id) {
     try {
       if (!(await confirmDialog('¿Eliminar este encargado?'))) return
+      console.log('[EncargadosManager] removeEncargado current lista:', lista, 'removing id:', id)
       const next = Array.isArray(lista) ? lista.filter(x => x && x.id !== id) : []
+      console.log('[EncargadosManager] removeEncargado -> next list:', next)
       setLista(next)
       try {
         onChange && onChange(next)
       } catch (err) {
-        console.error('[EncargadosManager] onChange threw', err)
+        console.error('[EncargadosManager] onChange threw in removeEncargado', err)
       }
     } catch (err) {
       console.error('[EncargadosManager] removeEncargado error', err)

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useLayoutEffect, useCallback } from 'react'
+import { alertError } from '../../utils/swal'
 import { useAuth } from '../../contexts/AuthContext'
 import EncargadosManager from './EncargadosManager'
 import { 
@@ -176,6 +177,9 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
     }
     const isValid = Object.keys(e).length === 0
     setErrors(e)
+    if (Object.keys(e).length > 0) {
+      try { alertError(Object.values(e).join('. ')) } catch (err) {}
+    }
     return { isValid, errors: e }
   }
 

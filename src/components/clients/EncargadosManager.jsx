@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { alertError } from '../../utils/swal'
 import { 
   UserPlus, 
   Trash2, 
@@ -81,6 +82,9 @@ function EncargadosManager({ value = [], onChange }) {
     }
 
     setErrors(newErrors)
+    if (Object.keys(newErrors).length > 0) {
+      try { alertError(Object.values(newErrors).join('. ')) } catch (err) {}
+    }
     return Object.keys(newErrors).length === 0
   }
 

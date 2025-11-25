@@ -18,7 +18,10 @@ export async function login(email, password) {
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error || 'Error al iniciar sesión');
+    const err = new Error(error.error || 'Error al iniciar sesión')
+    // adjuntar status para que los consumidores puedan distinguir 401 (credenciales)
+    try { err.status = response.status } catch (e) {}
+    throw err
   }
 
   const result = await response.json();

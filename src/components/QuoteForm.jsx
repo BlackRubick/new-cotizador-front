@@ -81,6 +81,9 @@ export default function QuoteForm({ onCreated, initial = null, onUpdated }) {
     if (phone && !/^\d{10}$/.test(phone)) e.phone = 'El teléfono debe contener exactamente 10 dígitos'
     if (!products || products.length === 0) e.products = 'Agrega al menos un producto'
     setErrors(e)
+    if (Object.keys(e).length > 0) {
+      try { alertError(Object.values(e).join('. ')) } catch (err) {}
+    }
     return Object.keys(e).length === 0
   }
 

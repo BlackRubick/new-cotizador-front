@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Activity, Mail, Lock, ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { alertError } from '../utils/swal'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -47,8 +48,15 @@ export default function LoginPage() {
         navigate('/home', { replace: true })
       }
     } catch (err) {
-      // Mostrar error al usuario
-      setError(err.message || 'Error al iniciar sesión. Verifica tus credenciales.')
+      // Si la API indica 401 (credenciales inválidas), mostrar alerta específica
+      const msg = (err && err.message) ? String(err.message) : 'Error al iniciar sesión. Verifica tus credenciales.'
+      if (err && (err.status === 401 || /password|contraseñ|credenciales|invalid/i.test(msg))) {
+        // Mostrar modal de error específico para contraseña incorrecta
+        try { alertError('Contraseña incorrecta. Verifica tu contraseña y vuelve a intentarlo.') } catch (e) {}
+        setError('Contraseña incorrecta')
+      } else {
+        setError(msg)
+      }
     } finally {
       setIsLoading(false)
     }

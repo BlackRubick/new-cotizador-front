@@ -55,12 +55,10 @@ function EncargadosManager({ value = [], onChange }) {
   const [errors, setErrors] = useState({})
 
   // Sincronizar con el prop value cuando cambie (pero solo al inicio)
-  const initializedRef = React.useRef(false)
+  // Sincronizar lista siempre que la prop `value` cambie, para evitar
+  // que el estado interno quede stale cuando el padre actualiza la lista.
   React.useEffect(() => {
-    if (!initializedRef.current) {
-      setLista(value || [])
-      initializedRef.current = true
-    }
+    setLista(Array.isArray(value) ? value : [])
   }, [value])
 
   function validateFields() {
@@ -111,10 +109,18 @@ function EncargadosManager({ value = [], onChange }) {
   }
 
   async function removeEncargado(id) {
-    if (!(await confirmDialog('¿Eliminar este encargado?'))) return
-    const next = lista.filter(x => x.id !== id)
-    setLista(next)
-    onChange && onChange(next)
+    try {
+      if (!(await confirmDialog('¿Eliminar este encargado?'))) return
+      const next = Array.isArray(lista) ? lista.filter(x => x && x.id !== id) : []
+      setLista(next)
+      try {
+        onChange && onChange(next)
+      } catch (err) {
+        console.error('[EncargadosManager] onChange threw', err)
+      }
+    } catch (err) {
+      console.error('[EncargadosManager] removeEncargado error', err)
+    }
   }
 
   function handleKeyPress(e) {

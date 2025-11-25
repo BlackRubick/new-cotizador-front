@@ -64,19 +64,22 @@ function EncargadosManager({ value = [], onChange }) {
 
   function validateFields() {
     const newErrors = {}
-    
+    const namePattern = /^[A-Za-zÁÉÍÓÚáéíóúÜüÑñ'\- ]+$/u
     if (!nombre.trim()) {
       newErrors.nombre = 'El nombre es requerido'
+    } else if (!namePattern.test(nombre.trim())) {
+      newErrors.nombre = 'El nombre solo debe contener letras y espacios'
     }
-    
+
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       newErrors.email = 'Email inválido'
     }
-    
-    if (telefono && !/^[0-9]{10}$/.test(telefono.replace(/\s/g, ''))) {
+
+    const onlyDigits = telefono ? telefono.replace(/\D/g, '') : ''
+    if (telefono && !/^[0-9]{10}$/.test(onlyDigits)) {
       newErrors.telefono = 'Teléfono debe tener 10 dígitos'
     }
-    
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -133,7 +136,11 @@ function EncargadosManager({ value = [], onChange }) {
             label="Nombre completo *"
             name="enc_nombre"
             value={nombre}
-            onChange={e => setNombre(e.target.value)}
+            onChange={e => {
+              const v = e.target.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÜüÑñ'\- ]+/g, '')
+              setNombre(v)
+              if (errors.nombre) setErrors(prev => { const n = { ...prev }; delete n.nombre; return n })
+            }}
             placeholder="Ej: Juan Pérez"
             icon={User}
             error={errors.nombre}
@@ -152,7 +159,11 @@ function EncargadosManager({ value = [], onChange }) {
             label="Teléfono"
             name="enc_telefono"
             value={telefono}
-            onChange={e => setTelefono(e.target.value)}
+            onChange={e => {
+              const digits = e.target.value.replace(/\D/g, '').slice(0, 10)
+              setTelefono(digits)
+              if (errors.telefono) setErrors(prev => { const n = { ...prev }; delete n.telefono; return n })
+            }}
             placeholder="10 dígitos"
             icon={Phone}
             error={errors.telefono}

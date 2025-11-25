@@ -111,6 +111,11 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
   const isEditMode = Boolean(initial && (initial.id || initial.apiClientId))
 
   function handleChange(key, value) {
+    // Filtrar caracteres no permitidos para ciertos campos de 'nombre'
+    const namePatternFilter = /[^A-Za-zÁÉÍÓÚáéíóúÜüÑñ'\- ]+/g
+    if (['empresaResponsable', 'hospital', 'dependencia'].includes(key) && typeof value === 'string') {
+      value = value.replace(namePatternFilter, '')
+    }
     setForm(prev => ({ ...prev, [key]: value }))
     // Limpiar error cuando el usuario empieza a escribir
     if (errors[key]) {
@@ -144,6 +149,31 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
     req.forEach(k => { if (!form[k]) e[k] = 'Campo requerido' })
     if (form.codigoPostal && !/^[0-9]{5}$/.test(form.codigoPostal)) e.codigoPostal = 'Código postal debe tener 5 dígitos'
     if (!form.encargados || form.encargados.filter(x=>x && x.nombre).length === 0) e.encargados = 'Se requiere al menos un encargado'
+    // Validaciones adicionales: nombres solo letras y teléfono 10 dígitos
+    const namePattern = /^[A-Za-zÁÉÍÓÚáéíóúÜüÑñ'\- ]+$/u
+    ['empresaResponsable','hospital','dependencia'].forEach(k => {
+      if (form[k] && !namePattern.test(String(form[k]).trim())) {
+        e[k] = 'El campo solo debe contener letras y espacios'
+      }
+    })
+    if (Array.isArray(form.encargados)) {
+      form.encargados.forEach((enc, idx) => {
+        try {
+          const base = `encargados[${idx}]`
+          if (!enc || !enc.nombre || !String(enc.nombre).trim()) {
+            e[base] = 'Nombre requerido'
+          } else if (!namePattern.test(String(enc.nombre).trim())) {
+            e[base] = 'El nombre solo debe contener letras y espacios'
+          }
+          if (enc && enc.telefono) {
+            const digits = String(enc.telefono).replace(/\D/g, '')
+            if (!/^\d{10}$/.test(digits)) {
+              e[`${base}.telefono`] = 'Teléfono debe tener exactamente 10 dígitos'
+            }
+          }
+        } catch (err) {}
+      })
+    }
     const isValid = Object.keys(e).length === 0
     setErrors(e)
     return { isValid, errors: e }

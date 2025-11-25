@@ -73,7 +73,12 @@ export default function QuoteForm({ onCreated, initial = null, onUpdated }) {
     const e = {}
     if (!sellerCompanyId && !sellerCompany) e.sellerCompany = 'Requerido'
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) e.email = 'Email inválido'
+    const namePattern = /^[A-Za-zÁÉÍÓÚáéíóúÜüÑñ'\- ]+$/u
     if (!clientName) e.clientName = 'Requerido'
+    else if (!namePattern.test(clientName)) e.clientName = 'El nombre solo debe contener letras y espacios'
+    if (clientContact && !namePattern.test(clientContact)) e.clientContact = 'El nombre de contacto solo debe contener letras y espacios'
+    // phone: only digits and exactly 10 digits when provided
+    if (phone && !/^\d{10}$/.test(phone)) e.phone = 'El teléfono debe contener exactamente 10 dígitos'
     if (!products || products.length === 0) e.products = 'Agrega al menos un producto'
     setErrors(e)
     return Object.keys(e).length === 0
@@ -665,6 +670,11 @@ export default function QuoteForm({ onCreated, initial = null, onUpdated }) {
                 onChange={id => setSelectedClientId(id)}
                 placeholder={"-- Selecciona un cliente existente --"}
               />
+              {errors.clientName && (
+                <p className="text-red-500 text-sm mt-2 flex items-center gap-1">
+                  <AlertCircle size={14} /> {errors.clientName}
+                </p>
+              )}
             </div>
 
             {selectedClientPreview && (
@@ -733,10 +743,19 @@ export default function QuoteForm({ onCreated, initial = null, onUpdated }) {
                 </label>
                 <input 
                   value={clientContact} 
-                  onChange={e => setClientContact(e.target.value)} 
+                  onChange={e => {
+                    const v = e.target.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÜüÑñ'`´\- ]+/g, '')
+                    setClientContact(v)
+                    setErrors(prev => { const p = { ...prev }; delete p.clientContact; return p })
+                  }}
                   className="w-full border-2 border-slate-200 rounded-lg px-4 py-3 focus:border-blue-500 focus:outline-none transition-colors" 
                   placeholder="Nombre del contacto" 
                 />
+                {errors.clientContact && (
+                  <p className="text-red-500 text-sm mt-2 flex items-center gap-1">
+                    <AlertCircle size={14} /> {errors.clientContact}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
@@ -765,10 +784,19 @@ export default function QuoteForm({ onCreated, initial = null, onUpdated }) {
                 </label>
                 <input 
                   value={phone} 
-                  onChange={e => setPhone(e.target.value)} 
+                  onChange={e => {
+                    const v = e.target.value.replace(/\D/g, '').slice(0, 10)
+                    setPhone(v)
+                    setErrors(prev => { const p = { ...prev }; delete p.phone; return p })
+                  }}
                   className="w-full border-2 border-slate-200 rounded-lg px-4 py-3 focus:border-blue-500 focus:outline-none transition-colors" 
-                  placeholder="+52 ..." 
+                  placeholder="10 dígitos sin espacios" 
                 />
+                {errors.phone && (
+                  <p className="text-red-500 text-sm mt-2 flex items-center gap-1">
+                    <AlertCircle size={14} /> {errors.phone}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">

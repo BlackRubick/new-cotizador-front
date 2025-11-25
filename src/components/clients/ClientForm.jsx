@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useLayoutEffect, useCallback } from 'react'
-import { alertError } from '../../utils/swal'
+import { alertError, alertSuccess } from '../../utils/swal'
+import clientService from '../../services/clientService'
 import { useAuth } from '../../contexts/AuthContext'
 import EncargadosManager from './EncargadosManager'
 import { 
@@ -481,6 +482,28 @@ export default function ClientForm({ initial = {}, onSave, onCancel }) {
                 })
               }
             }} 
+            onPersist={async (list) => {
+              // Persistir encargados inmediatamente en el backend si estamos en modo edición
+              if (!isEditMode || !(initial && (initial.id || initial.apiClientId))) return
+              try {
+                setIsSubmitting(true)
+                const apiId = initial.apiClientId || (initial.id && String(initial.id).split('-')[0]) || initial.id
+                const payload = { ...initial, encargados: list }
+                const res = await clientService.updateClient(apiId, payload)
+                if (res && res.success) {
+                  // actualizar estado local para reflejar persistencia
+                  setForm(prev => ({ ...prev, encargados: list }))
+                  try { await alertSuccess('Encargados actualizados') } catch (e) {}
+                } else {
+                  try { await alertError('Error actualizando encargados: ' + (res && res.error)) } catch (e) {}
+                }
+              } catch (err) {
+                console.error('[ClientForm] error persisting encargados', err)
+                try { await alertError('Error al guardar encargados') } catch (e) {}
+              } finally {
+                setIsSubmitting(false)
+              }
+            }}
           />
         </div>
         

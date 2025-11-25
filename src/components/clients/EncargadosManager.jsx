@@ -46,7 +46,7 @@ const InputField = ({ label, value, onChange, placeholder, icon: Icon, error, ty
   </div>
 )
 
-function EncargadosManager({ value = [], onChange }) {
+function EncargadosManager({ value = [], onChange, onPersist }) {
   const [lista, setLista] = useState(value || [])
   const [nombre, setNombre] = useState('')
   const [cargo, setCargo] = useState('')
@@ -101,6 +101,9 @@ function EncargadosManager({ value = [], onChange }) {
     try {
       console.log('[EncargadosManager] addEncargado -> next list:', next)
       onChange && onChange(next)
+      if (onPersist) {
+        try { onPersist(next) } catch (err) { console.error('[EncargadosManager] onPersist threw in addEncargado', err) }
+      }
     } catch (err) {
       console.error('[EncargadosManager] onChange threw in addEncargado', err)
     }
@@ -122,6 +125,9 @@ function EncargadosManager({ value = [], onChange }) {
       setLista(next)
       try {
         onChange && onChange(next)
+        if (onPersist) {
+          try { onPersist(next) } catch (err) { console.error('[EncargadosManager] onPersist threw in removeEncargado', err) }
+        }
       } catch (err) {
         console.error('[EncargadosManager] onChange threw in removeEncargado', err)
       }

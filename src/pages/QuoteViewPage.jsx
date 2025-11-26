@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import MainTemplate from '../templates/MainTemplate'
 import quoteService from '../services/quoteService'
 import pdfService from '../services/pdfService'
+import { findSellerCompany } from '../config/sellerCompanies'
 import { 
   DollarSign, 
   Calendar, 
@@ -279,25 +280,9 @@ export default function QuoteViewPage() {
   async function generatePDFWithTemplate() {
     return new Promise((resolve, reject) => {
       try {
-        // Obtener datos de la empresa y plantilla
-        // Soporta búsqueda por `sellerCompanyId` (slug), por nombre (case-insensitive) y por slug
-        const companyData = {
-          // keyed by display name (upper-case)
-          'CONDUIT LIFE': { template: 'CONDUIT-LIFE.jpeg', name: 'CONDUIT LIFE', fullName: 'Conduit Life S.A. de C.V.', address: 'Camino Real a Xochitepec 108 PA, Colonia La Noria Xochimilco, CDMX CP: 16030', rfc: 'CLI150120328' },
-          'BIOSYSTEMS HLS': { template: 'Biosystems-HLS.jpeg', name: 'BIOSYSTEMS HLS', fullName: 'Biosystems HLS S.A. de C.V.', address: 'Camino Real a Xochitepec 108 PA, Colonia La Noria Xochimilco, CDMX CP: 16030', rfc: 'BHL130614LQ4' },
-          'INGENIERÍA CLÍNICA Y DISEÑO': { template: 'INGENIERIA-CLINICA-DISEÑO.jpeg', name: 'INGENIERÍA CLÍNICA Y DISEÑO', fullName: 'Ingeniería Clínica y Diseño S.A. de C.V.', address: 'Viena 68, Colonia Del Carmen, Alcaldía Coyoacán, CP. 04100 CDMX', rfc: 'ICD090619J79' },
-          'ESCALA BIOMÉDICA': { template: 'ESCALA-BIOMEDICA.jpeg', name: 'ESCALA BIOMÉDICA', fullName: 'Escala Biomédica S.A. de C.V.', address: 'Av. Insurgentes 682 int. 706, Colonia Del Valle Norte, Benito Juárez CP. 03103 CDMX', rfc: 'EBI1081216T38' },
-          // keyed by slug (lower-case) for robustness
-          'conduit-life': { template: 'CONDUIT-LIFE.jpeg', name: 'CONDUIT LIFE', fullName: 'Conduit Life S.A. de C.V.', address: 'Camino Real a Xochitepec 108 PA, Colonia La Noria Xochimilco, CDMX CP: 16030', rfc: 'CLI150120328' },
-          'biosystems-hls': { template: 'Biosystems-HLS.jpeg', name: 'BIOSYSTEMS HLS', fullName: 'Biosystems HLS S.A. de C.V.', address: 'Camino Real a Xochitepec 108 PA, Colonia La Noria Xochimilco, CDMX CP: 16030', rfc: 'BHL130614LQ4' },
-          'ingenieria-clinica': { template: 'INGENIERIA-CLINICA-DISEÑO.jpeg', name: 'INGENIERÍA CLÍNICA Y DISEÑO', fullName: 'Ingeniería Clínica y Diseño S.A. de C.V.', address: 'Viena 68, Colonia Del Carmen, Alcaldía Coyoacán, CP. 04100 CDMX', rfc: 'ICD090619J79' },
-          'escala-biomedica': { template: 'ESCALA-BIOMEDICA.jpeg', name: 'ESCALA BIOMÉDICA', fullName: 'Escala Biomédica S.A. de C.V.', address: 'Av. Insurgentes 682 int. 706, Colonia Del Valle Norte, Benito Juárez CP. 03103 CDMX', rfc: 'EBI1081216T38' }
-        }
-
+        // Obtener datos de la empresa y plantilla (desde config central)
         const rawKey = (quote.sellerCompanyId || quote.sellerCompany || '').toString().trim()
-        const lookupById = rawKey.toLowerCase()
-        const lookupByName = rawKey.toUpperCase()
-        const company = companyData[lookupById] || companyData[lookupByName] || null
+        const company = findSellerCompany(rawKey)
 
         const sellerCompany = company ? {
           name: company.name,
@@ -563,41 +548,9 @@ export default function QuoteViewPage() {
   function handleViewPDF() {
     if (!quote) return
     
-    // Mapeo de empresas a plantillas y datos completos
-    const companyData = {
-      'CONDUIT LIFE': {
-        template: 'CONDUIT-LIFE.jpeg',
-        name: 'CONDUIT LIFE',
-        fullName: 'CONDUIT LIFE',
-        address: 'Calle Principal #123, Col. Centro, Ciudad, Estado, C.P. 12345',
-        rfc: 'CLF123456ABC'
-      },
-      'BIOSYSTEMS HLS': {
-        template: 'Biosystems-HLS.jpeg',
-        name: 'BIOSYSTEMS HLS',
-        fullName: 'BIOSYSTEMS HLS',
-        address: 'Av. Tecnológico #456, Col. Industrial, Ciudad, Estado, C.P. 54321',
-        rfc: 'BHS789012DEF'
-      },
-      'INGENIERÍA CLÍNICA Y DISEÑO': {
-        template: 'INGENIERIA-CLINICA-DISEÑO.jpeg',
-        name: 'INGENIERÍA CLÍNICA Y DISEÑO',
-        fullName: 'INGENIERÍA CLÍNICA Y DISEÑO S.A. DE C.V.',
-        address: 'Boulevard Innovación #789, Col. Empresarial, Ciudad, Estado, C.P. 67890',
-        rfc: 'ICD345678GHI'
-      },
-      'ESCALA BIOMÉDICA': {
-        template: 'ESCALA-BIOMEDICA.jpeg',
-        name: 'ESCALA BIOMÉDICA',
-        fullName: 'ESCALA BIOMÉDICA',
-        address: 'Calle Salud #321, Col. Médica, Ciudad, Estado, C.P. 09876',
-        rfc: 'EBM901234JKL'
-      }
-    }
-    
-    // Obtener la empresa según el nombre
-    const companyName = (quote.sellerCompany || '').toUpperCase()
-    const company = companyData[companyName]
+    // Obtener la empresa según slug o nombre (desde config central)
+    const rawKey = (quote.sellerCompanyId || quote.sellerCompany || '').toString().trim()
+    const company = findSellerCompany(rawKey)
     
     // Preparar datos de la empresa vendedora
     const sellerCompany = company ? {

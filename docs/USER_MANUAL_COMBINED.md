@@ -1,185 +1,3 @@
-# Manual de Usuario — new-cotizador-front
-
-Última actualización: 25 de noviembre de 2025
-
-Resumen
--------
-Este manual explica los flujos principales de la aplicación (instalación, acceso, clientes, productos, cotizaciones y administración). Está escrito para usuarios finales y formadores. En cada sección hay lugares marcados para agregar capturas de pantalla.
-
-Índice
------
-- Preparación e instalación
-- Acceso / Login
-- Navegación general
-- Clientes (ver, crear, editar, encargados)
-- Productos (ver, crear, editar, borrar)
-- Cotizaciones (crear, editar, enviar, borrar, PDF)
-- Exportar / Importar
-- Roles y permisos
-- Validaciones y mensajes
-- Resolución de problemas y FAQ
-- Guiones de formación
-- Anexos (comandos y contactos)
-
-Preparación e instalación
--------------------------
-
-Requisitos mínimos
-- Navegador moderno: Chrome (recomendado), Edge, Firefox
-- Conexión a la URL de la aplicación o acceso local
-
-Ejecutar localmente (solo para desarrollo/QA)
-
-```powershell
-npm install
-npm run dev
-```
-
-Accede a la URL que muestre Vite (por ejemplo `http://localhost:5173`) o la dirección proporcionada por el administrador.
-
-Acceso / Login
----------------
-
-Pasos básicos
-- Introduce tu correo y contraseña
-- Pulsa "Ingresar"
-
-Comportamiento esperado
-- Credenciales válidas: redirección al panel principal
-- Credenciales inválidas: aparecerá una alerta con el error (si la contraseña es incorrecta se mostrará "Contraseña incorrecta")
-
-Notas
-- La aplicación muestra errores devueltos por la API como alertas claras para que el usuario sepa qué corregir.
-
-Navegación general
--------------------
-
-Elementos principales
-- Cabecera: usuario, perfil, cerrar sesión
-- Menú: Home, Cotizaciones, Productos, Clientes, Administración, About
-- Contenido: área central donde se muestran las vistas
-
-Consejo
-- Usa el buscador en las listas para filtrar rápidamente.
-
-Clientes
---------
-
-Ver clientes
-- Navega a "Clientes". La lista permite búsqueda y filtrado.
-
-Crear cliente (resumen)
-1. Nuevo Cliente → completa los campos obligatorios → Guardar
-2. Verás una confirmación si el guardado fue exitoso
-
-Editar cliente
-1. Selecciona "Editar" en la fila del cliente
-2. Cambia los campos necesarios → Guardar
-3. Si hay errores, la app mostrará mensajes junto a los campos y una alerta resumen
-
-Encargados
-- Añadir/editar/eliminar encargados desde el bloque correspondiente
-- Las modificaciones sobre encargados se persisten inmediatamente en el servidor; si ocurre un error, se informará mediante una alerta
-
-Productos (máquinas)
----------------------
-
-Editar producto
-1. Productos → buscar → Editar
-2. Cambia nombre, precio, stock, imagen → Guardar
-
-Borrar producto
-1. Productos → Eliminar → confirmar
-2. Si el producto está en cotizaciones activas, el servidor puede evitar el borrado; la app mostrará el motivo si ocurre
-
-Cotizaciones
-------------
-
-Crear cotización (resumen)
-1. Cotizaciones → Nueva cotización
-2. Selecciona cliente, añade líneas (productos/servicios), ajusta cantidades y precios
-3. Revisa totales y guardar
-
-Editar cotización
-1. Abrir cotización → Editar → modificar → Guardar
-
-Enviar cotización (por correo)
-1. En la vista detalle, pulsa Enviar
-2. Confirma destinatario y mensaje → Enviar
-3. Éxito: notificación; error: alerta con la razón
-
-Borrar cotización
-1. Seleccionar Eliminar → confirmar
-2. Si la API rechaza la operación, la app mostrará la razón
-
-Generar PDF
-- Desde la vista detalle puedes generar o descargar el PDF de la cotización
-
-Exportar / Importar
--------------------
-
-- Importar clientes: subir `.xlsx`/`.xls` con cabeceras (la app mostrará el resumen de importación)
-- Exportar: CSV/XLSX desde las listas de Clientes, Productos o Cotizaciones
-
-Roles y permisos
------------------
-
-- Roles típicos: admin, vendedor, viewer
-- Si no ves una opción (p. ej. Admin) puede deberse a permisos; consulta al administrador
-
-Validaciones y mensajes
------------------------
-
-- Campos obligatorios: se muestran mensajes inline y, al intentar guardar, un resumen en alerta
-- Email: validación de formato
-- Teléfono: solo dígitos; se espera 10 caracteres donde corresponda
-- Nombres: no deben contener números
-
-Resolución de problemas (FAQ)
------------------------------
-
-La app se queda "Guardando..."
-- Abre DevTools → Network y revisa la petición (PUT/POST) que debería haberse enviado
-- Si la petición devuelve 4xx/5xx, copia la respuesta para soporte
-
-Errores al eliminar encargados
-- Revisar la respuesta del servidor en Network; puede ser un fallo de validación (por ejemplo formato de fecha)
-
-Guiones de formación (ejercicios)
---------------------------------
-
-Ejercicio 1 — Flujo completo (30–45 min)
-1. Iniciar sesión
-2. Crear cliente con encargado
-3. Crear productos
-4. Generar cotización y descargar PDF
-
-Ejercicio 2 — Edición de encargados (10–15 min)
-1. Abrir cliente con encargados
-2. Añadir encargado con teléfono inválido y ver la validación
-3. Añadir encargado válido y eliminar otro; confirmar persistencia
-
-Anexos: comandos y contactos
---------------------------------
-
-Comandos (PowerShell)
-
-```powershell
-npm ci
-npm run dev
-npm run build
-```
-
-Soporte
-- Responsable de producto: nombre@empresa.example
-- Equipo de TI: soporte@empresa.example
-
-Imágenes y capturas
--------------------
-
-Agrega archivos PNG/JPG/AVIF en `docs/screenshots/` y reemplaza las rutas de ejemplo en el manual. Si quieres, puedo generar plantillas de captura de ejemplo.
-
-Fin del documento
 
 
 # Manual de Usuario - new-cotizador-front
@@ -208,7 +26,7 @@ Tabla de contenidos
 	- Ver lista
 	- Crear cliente
 	- Editar cliente
-	- Encargados (agregar / editar / eliminar — persistencia inmediata)
+	- Encargados (agregar / editar / eliminar)
 - **Productos**
 	- Ver catálogo
 	- Agregar/Editar producto
@@ -469,4 +287,123 @@ npm run build
 - Contacto y soporte:
 	- Responsable de producto: [nombre@empresa.example]
 	- Equipo de TI: [soporte@empresa.example]
+
+---
+
+Este manual está preparado para que añadas capturas en la carpeta `docs/screenshots/` y después generar un PDF a partir del Markdown si lo necesitas. Si quieres, puedo:
+
+- Añadir plantillas de slides con las capturas y texto resumido para formación.  
+- Generar una versión imprimible (PDF) desde este Markdown.
+
+¿Deseas que genere el PDF del manual ahora o que deje el archivo tal como está para que insertes tus capturas después? 
+
+
+````
+
+<!-- End USER_MANUAL.md content -->
+
+
+---
+
+<!-- Begin USER_MANUAL_EXTRA.md content -->
+
+```markdown
+# Manual — Secciones adicionales
+
+Este archivo complementa `USER_MANUAL.md` con instrucciones paso a paso para acciones que pediste: enviar cotizaciones, editar/borrar cotizaciones, editar clientes, administrar máquinas/productos y gestionar usuarios.
+
+---
+
+## Enviar cotizaciones (por email)
+
+1. Abre la cotización desde la lista o el panel de detalle.
+2. Haz clic en `Enviar` o `Enviar por email`.
+3. En el modal que aparece, confirma o edita el destinatario (se precargan los emails del cliente / encargado).
+4. Añade un asunto y mensaje si lo deseas.
+5. Pulsa `Enviar`.
+
+- Resultado esperado: un `toast` de éxito (o `alertSuccess`) y registro en el histórico.
+- En caso de fallo: la app muestra un `alertError` con la razón (dirección inválida, problema SMTP, etc.).
+
+Espacio para captura: `/docs/screenshots/cotizacion-enviar.png`
+
+---
+
+## Editar cotizaciones
+
+1. En la lista de cotizaciones, pulsa `Editar` en la fila correspondiente, o abre la cotización y pulsa `Editar`.
+2. Cambia cantidades, precios, descuentos u observaciones.
+3. Pulsa `Guardar`.
+
+- Validaciones: la aplicación valida campos obligatorios (cliente, al menos una línea, cantidades positivas) antes de llamar al servidor.
+- Resultado: `toast` de éxito al actualizar, o `alertError` con los mensajes devueltos por la API.
+
+Espacio para captura: `/docs/screenshots/cotizacion-editar.png`
+
+---
+
+## Borrar cotizaciones
+
+1. En la lista o vista detalle, pulsa el icono `Eliminar`.
+2. Confirma en el modal de confirmación.
+3. La aplicación solicitará al servidor borrar la cotización; si se permite, recibes `alertSuccess`.
+
+- Nota: si la cotización está asociada a facturación u otro estado que impida borrado, la API devolverá un error y la app mostrará `alertError` con el motivo.
+
+Espacio para captura: `/docs/screenshots/cotizacion-borrar.png`
+
+---
+
+## Editar Clientes (detallado)
+
+### Modificar datos básicos
+1. Clientes → buscar → `Editar`.
+2. Modificar nombre, dirección, teléfono, email, etc.
+3. Pulsar `Guardar`.
+
+- Si hay errores de validación, la app muestra mensajes inline y un `alertError` resumen.
+
+### Gestionar encargados
+- Agregar: rellena nombre, teléfono (10 dígitos), email → `Agregar Encargado`.
+- Editar: editar la fila en la lista de encargados → `Guardar`.
+- Eliminar: `Eliminar` → confirmar → la app persiste inmediatamente los cambios (PUT). Si hay error en el servidor, recibirás `alertError` y el cambio no se confirmará.
+
+Espacio para captura: `/docs/screenshots/cliente-encargados.png`
+
+---
+
+## Máquinas / Productos — editar y borrar
+
+### Editar producto
+1. Productos → buscar → `Editar`.
+2. Cambia nombre, precio, stock, descripción o imagen.
+3. `Guardar` → `toast` de éxito o `alertError` si falla.
+
+### Borrar producto
+1. Productos → `Eliminar` → confirmar.
+2. Si el producto está referenciado en cotizaciones activas, el servidor puede impedir el borrado. En tal caso recibirás `alertError`.
+
+Espacio para captura: `/docs/screenshots/producto-editar.png`
+
+---
+
+## Usuarios y Administración
+
+### Crear usuario
+1. Admin → Usuarios → `Nuevo usuario`.
+2. Rellena: nombre, email, rol (ej. `admin`, `vendedor`), y opcionalmente contraseña temporal.
+3. `Guardar` → `toast` de éxito.
+
+### Editar usuario
+1. Admin → Usuarios → `Editar`.
+2. Cambiar rol o datos y `Guardar`.
+3. Algunos cambios en permisos requieren que el usuario vuelva a iniciar sesión.
+
+### Eliminar  usuario
+1. Admin → Usuarios → `Eliminar` → confirmar.
+
+
+Espacio para captura: `/docs/screenshots/usuario-crear.png`
+
+---
 

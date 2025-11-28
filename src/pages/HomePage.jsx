@@ -168,7 +168,7 @@ export default function HomePage() {
   const analyticsCards = [
     {
       id: 'sellers',
-      title: 'Mejores Vendedores',
+      title: 'Usuarios Con más Cotizaciones',
       icon: Award,
       gradient: 'from-med-primary to-med-primary-500',
       data: analytics.topSellers

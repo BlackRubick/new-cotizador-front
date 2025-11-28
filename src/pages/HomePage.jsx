@@ -175,7 +175,7 @@ export default function HomePage() {
     },
     {
       id: 'products',
-      title: 'Productos Más Vendidos',
+      title: 'Productos Más Cotizados',
       icon: Package,
       gradient: 'from-med-success to-med-success',
       data: analytics.topProducts

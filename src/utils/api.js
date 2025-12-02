@@ -18,9 +18,9 @@ export async function apiJson(path, opts = {}) {
   return res.json()
 }
 
-export default apiFetch
 // Utilidad para hacer peticiones HTTP con autenticación
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+// Usamos la misma base definida arriba para mantener consistencia
+const API_URL = base || 'http://localhost:4000/api';
 
 /**
  * Obtener el token del localStorage
@@ -47,7 +47,8 @@ export async function fetchWithAuth(endpoint, options = {}) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_URL}${endpoint}`, {
+  const path = endpoint && endpoint.startsWith('/') ? endpoint : `/${endpoint}`
+  const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers,
   });
@@ -94,10 +95,14 @@ export async function del(endpoint) {
   return fetchWithAuth(endpoint, { method: 'DELETE' });
 }
 
-export default {
+const defaultExport = {
+  apiFetch,
+  apiJson,
   get,
   post,
   put,
   delete: del,
   fetchWithAuth,
-};
+}
+
+export default defaultExport

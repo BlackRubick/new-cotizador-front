@@ -1,3 +1,24 @@
+// Centralized API helper. Uses VITE_API_URL if provided, otherwise uses relative path.
+const base = import.meta.env.VITE_API_URL || ''
+
+export function apiFetch(path, opts = {}) {
+  const url = `${base}${path}`
+  return fetch(url, opts)
+}
+
+export async function apiJson(path, opts = {}) {
+  const res = await apiFetch(path, opts)
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    const err = new Error(`API error ${res.status}: ${text}`)
+    err.status = res.status
+    err.body = text
+    throw err
+  }
+  return res.json()
+}
+
+export default apiFetch
 // Utilidad para hacer peticiones HTTP con autenticación
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
